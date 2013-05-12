@@ -37,10 +37,10 @@ namespace BHO_HelloWorld
         PXCMFaceAnalysis fa;
         PXCMFaceAnalysis.Detection detection;
         PXCMFaceAnalysis.Attribute face_attribute;
-        PXCMFaceAnalysis.Detection.ProfileInfo dinfo;
-        PXCMFaceAnalysis.Attribute.ProfileInfo attribute_dinfo;
+        //PXCMFaceAnalysis.Detection.ProfileInfo dinfo;
+        //PXCMFaceAnalysis.Attribute.ProfileInfo attribute_dinfo;
         PXCMFaceAnalysis.ProfileInfo pf = new PXCMFaceAnalysis.ProfileInfo();
-        PXCMFaceAnalysis.Landmark landmark;
+        //PXCMFaceAnalysis.Landmark landmark;
         PXCMFaceAnalysis.Landmark.ProfileInfo lpi;
 
         UtilMCapture capture;
@@ -100,7 +100,7 @@ namespace BHO_HelloWorld
                 try
                 {
                     System.Threading.Thread.Sleep(10);
-
+                    // Read Image
                     sts = capture.ReadStreamAsync(images, out sps[0]);
                     if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
                     {
@@ -128,7 +128,6 @@ namespace BHO_HelloWorld
 
                     System.Threading.Thread.Sleep(10);
                     foreach (PXCMScheduler.SyncPoint s in sps) if (s != null) s.Dispose();
-                    //foreach (PXCMImage i in images) if (i != null) i.Dispose();
                 }
                 catch
                 {
@@ -148,16 +147,43 @@ namespace BHO_HelloWorld
             uint fidx = 0;
             fa.QueryFace(fidx, out fid, out timeStamp);
 
-            PXCMFaceAnalysis.Detection.Data face_data;
-            detection.QueryData(fid, out face_data);
-            PXCMRectU32 q = face_data.rectangle;
-            if (q.w > 0)
+            //Get face landmarks (eye, mouth, nose position)
+            PXCMFaceAnalysis.Landmark landmark = (PXCMFaceAnalysis.Landmark)fa.DynamicCast(PXCMFaceAnalysis.Landmark.CUID);
+            landmark.QueryProfile(1, out lpi);
+            landmark.SetProfile(ref lpi);
+            PXCMFaceAnalysis.Landmark.LandmarkData[] landmark_data = new PXCMFaceAnalysis.Landmark.LandmarkData[7];
+            sts = landmark.QueryLandmarkData(fid, PXCMFaceAnalysis.Landmark.Label.LABEL_7POINTS, landmark_data);
+
+            if (sts != pxcmStatus.PXCM_STATUS_ITEM_UNAVAILABLE)
             {
-                SendResult("Face detected");
+                //Do something with the landmarks
+                PXCMPoint3DF32 eye_left_outer = landmark_data[0].position;
+                PXCMPoint3DF32 eye_left_inner = landmark_data[1].position;
+                PXCMPoint3DF32 eye_right_outer = landmark_data[2].position;
+                PXCMPoint3DF32 eye_right_inner = landmark_data[3].position;
+                PXCMPoint3DF32 eye_mouth_left = landmark_data[4].position;
+                PXCMPoint3DF32 eye_mouth_right = landmark_data[5].position;
+
+                PXCMPoint3DF32 eye_left = GetCenter(eye_left_outer, eye_left_inner);
+                PXCMPoint3DF32 eye_right = GetCenter(eye_right_outer, eye_right_inner);
+                PXCMPoint3DF32 mouth = GetCenter(eye_mouth_left, eye_mouth_right);
+
+                
+                //SendResult("Face detected");
             }
-            //pictureBox1.Height = bmp.Height;
-            //pictureBox1.Width = bmp.Width;
-            //pictureBox1.Image = bmp;
+        }
+
+        protected PXCMPoint3DF32 GetCenter(PXCMPoint3DF32 p1, PXCMPoint3DF32 p2)
+        {
+	        int x2 = Math.Max((int)p1.x, (int)p2.x);
+	        int x1 = Math.Min((int)p1.x, (int)p2.x);
+	        int y2 = Math.Max((int)p1.y, (int)p2.y);
+	        int y1 = Math.Min((int)p1.y, (int)p2.y);
+
+	        PXCMPoint3DF32 center = new PXCMPoint3DF32();
+	        center.x	= x1 + (x2 - x1)/2;
+	        center.y	= y1 + (y2 - y1)/2;
+	        return center;
         }
     }
 }
