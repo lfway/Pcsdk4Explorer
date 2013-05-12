@@ -20,28 +20,9 @@ namespace BHO_HelloWorld
     {
         WebBrowser webBrowser;
         HTMLDocument document;
-        PcsdkRecog rec_ = new PcsdkRecog();
+        PcsdkRecog pc_sdk = new PcsdkRecog();
 
-        private delegate int MySuperDelegate(int Param);
-
-        public void MyDelegate()
-        {
-            int qwe = 234234;
-            document = (HTMLDocument)webBrowser.Document;
-            int i = 0;
-            foreach (IHTMLInputElement tempElement in document.getElementsByTagName("INPUT"))
-            {
-                System.Windows.Forms.MessageBox.Show(
-                    tempElement.name != null ?
-                        tempElement.name :
-                        "it sucks, no name, try id" + ((IHTMLElement)tempElement).id
-                    );
-                if (++i == 2) break;
-            }
-            //SomeDelegateTwo sd = SquareNumber;
-            //s
-        }
-
+        // Тут ловим код жеста и реагируем на него
         private void ReceiveResult(string message4)
         {
             System.Windows.Forms.MessageBox.Show(message4);
@@ -49,24 +30,8 @@ namespace BHO_HelloWorld
 
         public void OnDocumentComplete(object pDisp, ref object URL)
         {
-            document = (HTMLDocument)webBrowser.Document;
-            int i = 0;
-            /*foreach (IHTMLInputElement tempElement in document.getElementsByTagName("INPUT"))
-            {
-                System.Windows.Forms.MessageBox.Show(
-                    tempElement.name != null ? 
-                        tempElement.name : 
-                        "it sucks, no name, try id" + ((IHTMLElement)tempElement).id
-                    );
-                if (++i == 5) break;
-            }*/
-            //rec_.Start();
-            //rec_.Start2(delegate() { MyDelegate(); });
-            //rec_.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
-
-            //PcsdkRecog pc_sdk = new PcsdkRecog();
-            rec_.Start();
-            rec_.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
+            pc_sdk.Start();
+            pc_sdk.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
         }
 
         public void OnBeforeNavigate2(object pDisp, ref object URL, ref object Flags, ref object TargetFrameName, ref object PostData, ref object Headers, ref bool Cancel)
@@ -77,7 +42,6 @@ namespace BHO_HelloWorld
             {
                 if (tempElement.type.ToLower() == "password")
                 {
-
                     System.Windows.Forms.MessageBox.Show(tempElement.value);
                 }
 

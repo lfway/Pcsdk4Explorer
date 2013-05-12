@@ -20,20 +20,11 @@ namespace BHO_HelloWorld
 {
     class PcsdkRecog
     {
-        public PcsdkRecog()
-        {
-
-        }
-
-        public delegate void delegatename(string message2);
-        public PcsdkRecog(ref delegatename mydelegate)
-        {
-            mydelegate("qwe");
-        }
-
-
+        // делегат
         public delegate void MyNameDelegate(string message);
+        // событие
         public event MyNameDelegate MyNameCallback;
+        // отправка детектированного события
         private void SendResult(string message_to_send = "default")
         {
             MyNameCallback(message_to_send);
@@ -55,11 +46,6 @@ namespace BHO_HelloWorld
         UtilMCapture capture;
 
         BackgroundWorker bw1 = new BackgroundWorker();
-
-        public void Start2(Action action11)
-        {
-            action11();
-        }
 
         public void Start()
         {
