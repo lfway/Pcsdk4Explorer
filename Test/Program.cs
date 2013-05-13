@@ -15,6 +15,8 @@ namespace Test
         }
         static void Main(string[] args)
         {
+            string qwe = "adsasdasdasd";
+            int wq  = qwe.IndexOf("<<<");
 
             PcsdkRecog pc_sdk = new PcsdkRecog();
             pc_sdk.Start();

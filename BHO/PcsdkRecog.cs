@@ -53,7 +53,7 @@ namespace BHO_HelloWorld
             bw1.ProgressChanged += new ProgressChangedEventHandler(bw_ProgressChanged);
             bw1.WorkerReportsProgress = true;
             bw1.WorkerSupportsCancellation = true;
-
+           
             // create instance
             sts = PXCMSession.CreateInstance(out session);
             if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
@@ -81,7 +81,9 @@ namespace BHO_HelloWorld
             face_attribute = (PXCMFaceAnalysis.Attribute)fa.DynamicCast(PXCMFaceAnalysis.Attribute.CUID);
 
             //background worker
+            
             bw1.RunWorkerAsync();
+             
         }
         
         PXCMImage[] images = new PXCMImage[PXCMCapture.VideoStream.STREAM_LIMIT];
@@ -99,7 +101,7 @@ namespace BHO_HelloWorld
             {
                 try
                 {
-                    System.Threading.Thread.Sleep(10);
+                    System.Threading.Thread.Sleep(20);
                     // Read Image
                     sts = capture.ReadStreamAsync(images, out sps[0]);
                     if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
@@ -126,7 +128,7 @@ namespace BHO_HelloWorld
                     /////////////////////////////////////////////////////////
                     bw1.ReportProgress(0);
 
-                    System.Threading.Thread.Sleep(10);
+                    System.Threading.Thread.Sleep(30);
                     foreach (PXCMScheduler.SyncPoint s in sps) if (s != null) s.Dispose();
                 }
                 catch
@@ -141,7 +143,7 @@ namespace BHO_HelloWorld
         }
 
         GestureDetector mGestureDetector = new GestureDetector();
-
+        bool flag = false;
         [HandleProcessCorruptedStateExceptions]
         void bw_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
@@ -156,8 +158,15 @@ namespace BHO_HelloWorld
             PXCMFaceAnalysis.Landmark.LandmarkData[] landmark_data = new PXCMFaceAnalysis.Landmark.LandmarkData[7];
             sts = landmark.QueryLandmarkData(fid, PXCMFaceAnalysis.Landmark.Label.LABEL_7POINTS, landmark_data);
 
-            if (sts != pxcmStatus.PXCM_STATUS_ITEM_UNAVAILABLE)
+            if (sts != pxcmStatus.PXCM_STATUS_ITEM_UNAVAILABLE )
             {
+
+                if (flag == false)
+                {
+                    SendResult("Face detected");
+                    flag = true;
+                }
+                
                 //Do something with the landmarks
                 PXCMPoint3DF32 eye_left_outer = landmark_data[0].position;
                 PXCMPoint3DF32 eye_left_inner = landmark_data[1].position;
@@ -171,9 +180,12 @@ namespace BHO_HelloWorld
                 PXCMPoint3DF32 mouth = GetCenter(eye_mouth_left, eye_mouth_right);
 
                 FacePosition f_pos = new FacePosition(eye_left, eye_right, mouth);
-                mGestureDetector.AddPosition(f_pos);
-                //.GestureDetector..GestureDetector..GestureDetector.mGestureDetector.
-                SendResult("Face detected");
+                /*mGestureDetector.AddPosition(f_pos);
+                mGestureDetector.Process();
+                int r = mGestureDetector.GetResult();
+                */
+                /*if(r > 0)
+                    SendResult("Face detected");*/
             }
         }
 

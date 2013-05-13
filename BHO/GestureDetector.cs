@@ -64,7 +64,8 @@ namespace BHO_HelloWorld
         {
             mFacePosition = FacePosition;
         }
-        void Process()
+        public int m_Detected_Gesture = 0;
+        public void Process()
         {
             if (mFacePositionsSequence.Count == 1)
             {
@@ -115,48 +116,63 @@ namespace BHO_HelloWorld
 
             CalcAmplitudes();
             CalcHistory();
+
+            string sequence_hor = "";
+            for (int i = 0; i < mFacePositionsSequence.Count; i++)
+            {
+                sequence_hor += mFacePositionsSequence[i].m_turn_to;
+            }
+            int qwe = sequence_hor.IndexOf("<<<<");
+            if (qwe != -1)
+                m_Detected_Gesture = 1;
+            else
+                m_Detected_Gesture = 0;
+        }
+        public int GetResult()
+        {
+            return m_Detected_Gesture;
         }
         List<FacePosition> mFacePositionsSequence;
         int mSecuenceLength;
         //===
-    protected void CalcHistory()
-	{
-		mInclineHistory = "";
-        mTurnHistory = "";
-        mZHistory = "";
-		for(int i = 0; i < mFacePositionsSequence.Count; i++)
-		{
-			mInclineHistory	+= mFacePositionsSequence[i].m_incline_to;
-			mTurnHistory	+= mFacePositionsSequence[i].m_turn_to;
-			mZHistory		+= mFacePositionsSequence[i].m_z_to;
-		}
-	}
-    protected int CalcAmplitudes()
-	{
-		if( mFacePositionsSequence.Count < 2 )
-			return -1;
-		int angle_min = mFacePositionsSequence[0].getAndleEyes(), angle_max = mFacePositionsSequence[0].getAndleEyes();
-		int turn_min = mFacePositionsSequence[0].getCenter(), turn_max = mFacePositionsSequence[0].getCenter();
-		for( int i = 0; i < mFacePositionsSequence.Count; i++)
-		{
-			int angle_ = mFacePositionsSequence[i].getAndleEyes();
-			if(angle_ < angle_min) angle_min = angle_;
-			if(angle_ > angle_max) angle_max = angle_;
+        protected void CalcHistory()
+	    {
+		    mInclineHistory = "";
+            mTurnHistory = "";
+            mZHistory = "";
+		    for(int i = 0; i < mFacePositionsSequence.Count; i++)
+		    {
+			    mInclineHistory	+= mFacePositionsSequence[i].m_incline_to;
+			    mTurnHistory	+= mFacePositionsSequence[i].m_turn_to;
+			    mZHistory		+= mFacePositionsSequence[i].m_z_to;
+		    }
+	    }
+        protected int CalcAmplitudes()
+	    {
+		    if( mFacePositionsSequence.Count < 2 )
+			    return -1;
+		    int angle_min = mFacePositionsSequence[0].getAndleEyes(), angle_max = mFacePositionsSequence[0].getAndleEyes();
+		    int turn_min = mFacePositionsSequence[0].getCenter(), turn_max = mFacePositionsSequence[0].getCenter();
+		    for( int i = 0; i < mFacePositionsSequence.Count; i++)
+		    {
+			    int angle_ = mFacePositionsSequence[i].getAndleEyes();
+			    if(angle_ < angle_min) angle_min = angle_;
+			    if(angle_ > angle_max) angle_max = angle_;
 
-			//int turn_ = mFacePositionsSequence[i].getCenter() - mAmplitudeTurnHorizontal_center;
-            int turn_ = Math.Abs(mAmplitudeTurnHorizontal_center - Math.Abs(mAmplitudeTurnHorizontal_center - mFacePositionsSequence[i].getCenter()));
-			if(turn_ < turn_min) turn_min = turn_;
-			if(turn_ > turn_max) turn_max = turn_;
-		}
-		mAmplitudeIncline = angle_max - angle_min;
-        mAmplitudeTurnHorizontal = Math.Abs(Math.Abs(turn_max + turn_min) / 2 - mAmplitudeTurnHorizontal_center);
+			    //int turn_ = mFacePositionsSequence[i].getCenter() - mAmplitudeTurnHorizontal_center;
+                int turn_ = Math.Abs(mAmplitudeTurnHorizontal_center - Math.Abs(mAmplitudeTurnHorizontal_center - mFacePositionsSequence[i].getCenter()));
+			    if(turn_ < turn_min) turn_min = turn_;
+			    if(turn_ > turn_max) turn_max = turn_;
+		    }
+		    mAmplitudeIncline = angle_max - angle_min;
+            mAmplitudeTurnHorizontal = Math.Abs(Math.Abs(turn_max + turn_min) / 2 - mAmplitudeTurnHorizontal_center);
 
-        if (Math.Abs(mAmplitudeTurnHorizontal) < 3)
-			mAmplitudeTurnHorizontal_center = (turn_max + turn_min)/2;
+            if (Math.Abs(mAmplitudeTurnHorizontal) < 3)
+			    mAmplitudeTurnHorizontal_center = (turn_max + turn_min)/2;
 
-		//mAmplitudeTurnHorizontal; -= mAmplitudeTurnHorizontal_center;
-        return 0;
-	}
+		    //mAmplitudeTurnHorizontal; -= mAmplitudeTurnHorizontal_center;
+            return 0;
+	    }
         //===
         string mInclineHistory;
 	    string mTurnHistory;

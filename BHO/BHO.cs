@@ -25,11 +25,17 @@ namespace BHO_HelloWorld
         // Тут ловим код жеста и реагируем на него
         private void ReceiveResult(string message4)
         {
+            if (flag == false)
+                return;
+            flag = false;
             System.Windows.Forms.MessageBox.Show(message4);
-        } 
+        }
+        bool flag = true;
 
         public void OnDocumentComplete(object pDisp, ref object URL)
         {
+
+            //System.Windows.Forms.MessageBox.Show("");
             pc_sdk.Start();
             pc_sdk.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
         }
