@@ -18,7 +18,7 @@ using System.Runtime.ExceptionServices;
 
 namespace BHO_HelloWorld
 {
-    class PcsdkRecog
+    public class PcsdkRecog
     {
         // делегат
         public delegate void MyNameDelegate(string message);
@@ -140,6 +140,8 @@ namespace BHO_HelloWorld
             session.Dispose();
         }
 
+        GestureDetector mGestureDetector = new GestureDetector();
+
         [HandleProcessCorruptedStateExceptions]
         void bw_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
@@ -168,10 +170,13 @@ namespace BHO_HelloWorld
                 PXCMPoint3DF32 eye_right = GetCenter(eye_right_outer, eye_right_inner);
                 PXCMPoint3DF32 mouth = GetCenter(eye_mouth_left, eye_mouth_right);
 
-                
-                //SendResult("Face detected");
+                FacePosition f_pos = new FacePosition(eye_left, eye_right, mouth);
+                mGestureDetector.AddPosition(f_pos);
+                //.GestureDetector..GestureDetector..GestureDetector.mGestureDetector.
+                SendResult("Face detected");
             }
         }
+
 
         protected PXCMPoint3DF32 GetCenter(PXCMPoint3DF32 p1, PXCMPoint3DF32 p2)
         {
