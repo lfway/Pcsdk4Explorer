@@ -27,8 +27,15 @@ namespace BHO_HelloWorld
         List<FacePosition> mFacePositionsSequence;
         int mSecuenceLength;
         FacePosition f_pos;
+
+
+        int counter_wait = 0;
+
+        bool allow_receive_result = true;
         private void ReceiveResult(List<PXCMPoint3DF32> message4)
         {
+            if (allow_receive_result == false)
+                return;
             if (message4.Count != 6)
                 return;
 
@@ -45,42 +52,117 @@ namespace BHO_HelloWorld
 
             f_pos = new FacePosition(eye_left, eye_right, mouth);
 
-
+            int eyes_distance = f_pos.getEyesDist();
 
             
             GestureDetector.instance.AddPosition(f_pos);
             int res;
-            string res2;
-            GestureDetector.instance.Process(out res, out res2);
+            string turn_history;
+            GestureDetector.instance.Process(out res, out turn_history);
 
-
-            if (flag == false)
+            
+            /*if (flag == false)
                 return;
             if (res==100)
-            flag = false;
+            flag = false;*/
 
-            webBrowser.StatusBar = true;
+
+            
+
+            // === 1. Zoom ===
+            object vZoom1 = 100;
+            object vZoom2 = 130;
+            if (eyes_distance>110)
+                webBrowser.ExecWB(OLECMDID.OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT, ref vZoom2, IntPtr.Zero);
+            else
+                if (eyes_distance < 100)
+                    webBrowser.ExecWB(OLECMDID.OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT, ref vZoom1, IntPtr.Zero);
+
+            // === 2. Turn ===
+            int left_ctr = 0;
+            int right_ctr = 0;
+
+            if (counter_wait != 0)
+                counter_wait--;
+
+
+            if (turn_history.Length >= 14 && counter_wait == 0)
+            {
+                for (int i = 0; i < turn_history.Length; i++)
+                {
+                    if (turn_history.Substring(i, 1) == "<")
+                        right_ctr++;
+                    if (turn_history.Substring(i, 1) == ">")
+                        left_ctr++;
+                }
+                if (left_ctr > (double)right_ctr * 1.5)
+                {
+                    //webBrowser.GoBack();
+                }
+                if (right_ctr > (double)left_ctr * 1.5)
+                {
+                    // webBrowser.GoForward();
+                }
+                
+                if (left_ctr >= 4 && (left_ctr > (double)right_ctr * 1.5))
+                {
+                    if (counter_wait == 0)
+                    {
+                        counter_wait = 33;
+                        allow_receive_result = false;
+                        //pc_sdk.MyNameCallback -= new PcsdkRecog.MyNameDelegate(ReceiveResult);
+                        webBrowser.GoBack();
+                        return;
+                    }
+                }
+                else if (right_ctr >= 4 && (right_ctr > (double)left_ctr * 1.5))
+                {
+                    if (counter_wait == 0)
+                    {
+                        counter_wait = 33;
+                        allow_receive_result = false;
+                        //pc_sdk.MyNameCallback -= new PcsdkRecog.MyNameDelegate(ReceiveResult);
+                        webBrowser.GoForward();
+                        return;
+                    }
+                }
+            }
+            //webBrowser.FullScreen = true;
+
             counter_++;
-            webBrowser.StatusText = counter_.ToString() +",res: " + res.ToString() + ", res2: " + res2;
+
+            //webBrowser.StatusBar = true;
+            
+            webBrowser.StatusText = counter_.ToString() + ",dist: " + eyes_distance.ToString() + ", turn history: " + turn_history + ", left: " + left_ctr.ToString() + ", right: " + right_ctr.ToString() +
+                ", control: " + eye_left_outer.x;
         }
         bool flag = true;
 
-
+        bool FirstRun = true;
         public void OnDocumentComplete(object pDisp, ref object URL)
         {
-            flag = true;
-            document = (HTMLDocument)webBrowser.Document;
-            doc = document as mshtml.HTMLDocument;
+            allow_receive_result = true;
+            if (FirstRun == true)
+            {
+                webBrowser.Navigate("http://lenta.ru");
+                flag = true;
+                document = (HTMLDocument)webBrowser.Document;
+                doc = document as mshtml.HTMLDocument;
 
-            webBrowser.StatusBar = false;
-            //webBrowser.StatusText = "qwe";
-            //System.Windows.Forms.MessageBox.Show("");
-            pc_sdk.Start();
+                webBrowser.StatusBar = true;
+                //webBrowser.StatusText = "qwe";
+                //System.Windows.Forms.MessageBox.Show("");
+
+                pc_sdk.Start();
+                //pc_sdk.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
+            }
             pc_sdk.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
+            FirstRun = false;
         }
 
         public void OnBeforeNavigate2(object pDisp, ref object URL, ref object Flags, ref object TargetFrameName, ref object PostData, ref object Headers, ref bool Cancel)
         {
+            
             document = (HTMLDocument)webBrowser.Document;
 
             foreach (IHTMLInputElement tempElement in document.getElementsByTagName("INPUT"))
@@ -130,8 +212,10 @@ namespace BHO_HelloWorld
         {
             if (site != null)
             {
+                
                 //webBrowser.
                 webBrowser = (WebBrowser)site;
+               
                 webBrowser.DocumentComplete += new DWebBrowserEvents2_DocumentCompleteEventHandler(this.OnDocumentComplete);
                 
                 webBrowser.BeforeNavigate2 += new DWebBrowserEvents2_BeforeNavigate2EventHandler(this.OnBeforeNavigate2);

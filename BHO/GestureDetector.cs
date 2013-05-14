@@ -34,7 +34,7 @@ namespace BHO_HelloWorld
         int mAngleLeftEyeToMouth;
         int mAngleRightEyeToMouth;
         int mEyesDistance;
-        int mEyesDist;
+        
         protected static double CalculateAngle(PXCMPoint3DF32 point1, PXCMPoint3DF32 point2)
         {
             int dx = (int)point1.x - (int)point2.x;
@@ -54,7 +54,7 @@ namespace BHO_HelloWorld
         public string m_z_to;
         public int getAndleEyes() { return mAngleLeftEyeToRightEye; }
 	    //public int getCenter() { return (int)mCenterFace.x; }
-	    public int getEyesDist() { return mEyesDist; }
+	    public int getEyesDist() { return mEyesDistance; }
     }
 
     class GestureDetector
@@ -158,9 +158,9 @@ namespace BHO_HelloWorld
                 sequence_hor += mFacePositionsSequence[i].m_turn_to;
             }
             str1 = sequence_hor;
-            int qwe = sequence_hor.IndexOf("<<<<");
+            /*int qwe = sequence_hor.IndexOf("<<<<");
             if (qwe != -1)
-                result = 100;
+                result = 100;*/
         }
         public int GetResult()
         {
