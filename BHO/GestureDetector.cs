@@ -59,6 +59,8 @@ namespace BHO_HelloWorld
 
     class GestureDetector
     {
+        int MAX_FRAMES_COUNT = 15;
+
         //threaf safe
         public static GestureDetector instance = new GestureDetector();
         private GestureDetector() { }
@@ -72,26 +74,36 @@ namespace BHO_HelloWorld
         //private object _lock;
 
 
-        protected FacePosition mFacePosition;
+        //protected FacePosition mFacePosition;
         public void AddPosition(FacePosition FacePosition)
         {
-            mFacePosition = FacePosition;
+            //mFacePosition = FacePosition;
+            mFacePositionsSequence.Add(FacePosition);
+            if (mFacePositionsSequence.Count >= MAX_FRAMES_COUNT)
+            {
+                mFacePositionsSequence.RemoveAt(0);//erase(mFacePositionsSequence.begin());
+            }
+
         }
         public int m_Detected_Gesture = 0;
-        public void Process(out int result)
+        public void Process(out int result, out string str1)
         {
-            result = 0;
-            //return;
+            //lock (this)
+            //{
+                result = 0;
+                str1 = "";
+                //return;
 
+
+                // if (mFacePositionsSequence.Count == 1)
+                // {
+                //    mAmplitudeTurnHorizontal_center = mFacePositionsSequence[0].getCenter();       
+                // }
+
+
+                result = mFacePositionsSequence.Count;
+            //}
             
-           // if (mFacePositionsSequence.Count == 1)
-           // {
-            //    mAmplitudeTurnHorizontal_center = mFacePositionsSequence[0].getCenter();       
-           // }
-
-
-            result = mFacePositionsSequence.Count;
-            return;
 
 
             // incline delta
@@ -145,15 +157,16 @@ namespace BHO_HelloWorld
             {
                 sequence_hor += mFacePositionsSequence[i].m_turn_to;
             }
+            str1 = sequence_hor;
             int qwe = sequence_hor.IndexOf("<<<<");
             if (qwe != -1)
-                result = 1;
+                result = 100;
         }
         public int GetResult()
         {
             return m_Detected_Gesture;
         }
-        List<FacePosition> mFacePositionsSequence;
+        List<FacePosition> mFacePositionsSequence = new List<FacePosition>();
         int mSecuenceLength;
         //===
         protected void CalcHistory()

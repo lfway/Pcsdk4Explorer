@@ -23,27 +23,52 @@ namespace BHO_HelloWorld
         PcsdkRecog pc_sdk = new PcsdkRecog();
         mshtml.HTMLDocument doc;
         // Тут ловим код жеста и реагируем на него
+        int counter_ = 0;
+        List<FacePosition> mFacePositionsSequence;
+        int mSecuenceLength;
+        FacePosition f_pos;
         private void ReceiveResult(List<PXCMPoint3DF32> message4)
         {
-            string qwe = message4.ToString();
-           // if (flag == false)
-          //      return;e
-           // flag = false;
-            //System.Windows.Forms.MessageBox.Show(qwe);
-            //HTMLDocument document = (HTMLDocument)webBrowser.Document;
-            //string div = "<div>" + qwe + "</div>";
-            //document.body.insertAdjacentHTML("afterBegin", div);
+            if (message4.Count != 6)
+                return;
+
+            PXCMPoint3DF32 eye_left_outer = message4[0];
+            PXCMPoint3DF32 eye_left_inner = message4[1];
+            PXCMPoint3DF32 eye_right_outer = message4[2];
+            PXCMPoint3DF32 eye_right_inner = message4[3];
+            PXCMPoint3DF32 eye_mouth_left = message4[4];
+            PXCMPoint3DF32 eye_mouth_right = message4[5];
+
+            PXCMPoint3DF32 eye_left = GetCenter(eye_left_outer, eye_left_inner);
+            PXCMPoint3DF32 eye_right = GetCenter(eye_right_outer, eye_right_inner);
+            PXCMPoint3DF32 mouth = GetCenter(eye_mouth_left, eye_mouth_right);
+
+            f_pos = new FacePosition(eye_left, eye_right, mouth);
+
+
+
+            
+            GestureDetector.instance.AddPosition(f_pos);
+            int res;
+            string res2;
+            GestureDetector.instance.Process(out res, out res2);
+
 
             if (flag == false)
                 return;
+            if (res==100)
             flag = false;
-            //doc.parentWindow.execScript("document.body.style.zoom='130%';");
+
             webBrowser.StatusBar = true;
+            counter_++;
+            webBrowser.StatusText = counter_.ToString() +",res: " + res.ToString() + ", res2: " + res2;
         }
         bool flag = true;
 
+
         public void OnDocumentComplete(object pDisp, ref object URL)
         {
+            flag = true;
             document = (HTMLDocument)webBrowser.Document;
             doc = document as mshtml.HTMLDocument;
 
@@ -136,5 +161,18 @@ namespace BHO_HelloWorld
 
         #endregion
 
+
+        protected PXCMPoint3DF32 GetCenter(PXCMPoint3DF32 p1, PXCMPoint3DF32 p2)
+        {
+            int x2 = Math.Max((int)p1.x, (int)p2.x);
+            int x1 = Math.Min((int)p1.x, (int)p2.x);
+            int y2 = Math.Max((int)p1.y, (int)p2.y);
+            int y1 = Math.Min((int)p1.y, (int)p2.y);
+
+            PXCMPoint3DF32 center = new PXCMPoint3DF32();
+            center.x = x1 + (x2 - x1) / 2;
+            center.y = y1 + (y2 - y1) / 2;
+            return center;
+        }
     }
 }
