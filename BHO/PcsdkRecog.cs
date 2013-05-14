@@ -110,6 +110,7 @@ namespace BHO_HelloWorld
             {
                 try
                 {
+                    GC.Collect();
                     System.Threading.Thread.Sleep(20);
                     // Read Image
                     sts = capture.ReadStreamAsync(images, out sps[0]);
@@ -146,9 +147,11 @@ namespace BHO_HelloWorld
                     return;
                 }
             }
+            
             fa.Dispose();
             capture.Dispose();
             session.Dispose();
+            GC.Collect();
         }
 
         //GestureDetector mGestureDetector = new GestureDetector();
@@ -156,6 +159,7 @@ namespace BHO_HelloWorld
         [HandleProcessCorruptedStateExceptions]
         void bw_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
+            GC.Collect();
             int fid;
             uint fidx = 0;
             fa.QueryFace(fidx, out fid, out timeStamp);
