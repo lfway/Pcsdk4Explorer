@@ -59,18 +59,41 @@ namespace BHO_HelloWorld
 
     class GestureDetector
     {
+        //threaf safe
+        public static GestureDetector instance = new GestureDetector();
+        private GestureDetector() { }
+        public static GestureDetector Instance
+        {
+            get
+            {
+                return instance;
+            }
+        }
+        //private object _lock;
+
+
         protected FacePosition mFacePosition;
         public void AddPosition(FacePosition FacePosition)
         {
             mFacePosition = FacePosition;
         }
         public int m_Detected_Gesture = 0;
-        public void Process()
+        public void Process(out int result)
         {
-            if (mFacePositionsSequence.Count == 1)
-            {
-                mAmplitudeTurnHorizontal_center = mFacePositionsSequence[0].getCenter();       
-            }
+            result = 0;
+            //return;
+
+            
+           // if (mFacePositionsSequence.Count == 1)
+           // {
+            //    mAmplitudeTurnHorizontal_center = mFacePositionsSequence[0].getCenter();       
+           // }
+
+
+            result = mFacePositionsSequence.Count;
+            return;
+
+
             // incline delta
             if (mFacePositionsSequence.Count < 2)
                 return;
@@ -124,9 +147,7 @@ namespace BHO_HelloWorld
             }
             int qwe = sequence_hor.IndexOf("<<<<");
             if (qwe != -1)
-                m_Detected_Gesture = 1;
-            else
-                m_Detected_Gesture = 0;
+                result = 1;
         }
         public int GetResult()
         {

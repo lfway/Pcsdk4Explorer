@@ -21,11 +21,12 @@ namespace BHO_HelloWorld
     public class PcsdkRecog
     {
         // делегат
-        public delegate void MyNameDelegate(string message);
+        public delegate void MyNameDelegate(List<PXCMPoint3DF32> message);
         // событие
         public event MyNameDelegate MyNameCallback;
         // отправка детектированного события
-        private void SendResult(string message_to_send = "default")
+        //private void SendResult(string message_to_send = "default")
+        private void SendResult(List<PXCMPoint3DF32> message_to_send)
         {
             MyNameCallback(message_to_send);
         } 
@@ -47,8 +48,16 @@ namespace BHO_HelloWorld
 
         BackgroundWorker bw1 = new BackgroundWorker();
 
+        bool started = false;
+
         public void Start()
         {
+            if (started == true)
+            {
+                
+                return;
+            }
+            started = true;
             bw1.DoWork += new DoWorkEventHandler(bw_DoWork);
             bw1.ProgressChanged += new ProgressChangedEventHandler(bw_ProgressChanged);
             bw1.WorkerReportsProgress = true;
@@ -142,7 +151,7 @@ namespace BHO_HelloWorld
             session.Dispose();
         }
 
-        GestureDetector mGestureDetector = new GestureDetector();
+        //GestureDetector mGestureDetector = new GestureDetector();
         bool flag = false;
         [HandleProcessCorruptedStateExceptions]
         void bw_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -161,31 +170,47 @@ namespace BHO_HelloWorld
             if (sts != pxcmStatus.PXCM_STATUS_ITEM_UNAVAILABLE )
             {
 
-                if (flag == false)
-                {
-                    SendResult("Face detected");
-                    flag = true;
-                }
+
                 
                 //Do something with the landmarks
+                List<PXCMPoint3DF32> face_elements = new List<PXCMPoint3DF32>();
                 PXCMPoint3DF32 eye_left_outer = landmark_data[0].position;
                 PXCMPoint3DF32 eye_left_inner = landmark_data[1].position;
                 PXCMPoint3DF32 eye_right_outer = landmark_data[2].position;
                 PXCMPoint3DF32 eye_right_inner = landmark_data[3].position;
                 PXCMPoint3DF32 eye_mouth_left = landmark_data[4].position;
                 PXCMPoint3DF32 eye_mouth_right = landmark_data[5].position;
+                face_elements.Add(eye_left_outer);
+                face_elements.Add(eye_left_inner);
+                face_elements.Add(eye_right_outer);
+                face_elements.Add(eye_right_inner);
+                face_elements.Add(eye_mouth_left);
+                face_elements.Add(eye_mouth_right);
 
-                PXCMPoint3DF32 eye_left = GetCenter(eye_left_outer, eye_left_inner);
-                PXCMPoint3DF32 eye_right = GetCenter(eye_right_outer, eye_right_inner);
-                PXCMPoint3DF32 mouth = GetCenter(eye_mouth_left, eye_mouth_right);
 
-                FacePosition f_pos = new FacePosition(eye_left, eye_right, mouth);
-                /*mGestureDetector.AddPosition(f_pos);
-                mGestureDetector.Process();
-                int r = mGestureDetector.GetResult();
-                */
-                /*if(r > 0)
-                    SendResult("Face detected");*/
+             //   PXCMPoint3DF32 eye_left = GetCenter(eye_left_outer, eye_left_inner);
+              //  PXCMPoint3DF32 eye_right = GetCenter(eye_right_outer, eye_right_inner);
+              //  PXCMPoint3DF32 mouth = GetCenter(eye_mouth_left, eye_mouth_right);
+
+              //  FacePosition f_pos = new FacePosition(eye_left, eye_right, mouth);
+               // GestureDetector.instance.AddPosition(f_pos);
+
+                //mGestureDetector. .AddPosition(f_pos);
+
+                //int result_gesture = 0;
+                //GestureDetector.instance.Process(out result_gesture);
+                //int r = mGestureDetector.GetResult();
+                
+                //if(r > 0)
+                //    SendResult("Face detected");
+
+                //if (flag == false)
+                //{
+
+                SendResult(face_elements);
+                    //SendResult(r.ToString());
+                    //flag = true;
+                //}
             }
         }
 

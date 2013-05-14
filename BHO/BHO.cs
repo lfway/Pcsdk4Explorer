@@ -21,20 +21,34 @@ namespace BHO_HelloWorld
         WebBrowser webBrowser;
         HTMLDocument document;
         PcsdkRecog pc_sdk = new PcsdkRecog();
-
+        mshtml.HTMLDocument doc;
         // Тут ловим код жеста и реагируем на него
-        private void ReceiveResult(string message4)
+        private void ReceiveResult(List<PXCMPoint3DF32> message4)
         {
+            string qwe = message4.ToString();
+           // if (flag == false)
+          //      return;e
+           // flag = false;
+            //System.Windows.Forms.MessageBox.Show(qwe);
+            //HTMLDocument document = (HTMLDocument)webBrowser.Document;
+            //string div = "<div>" + qwe + "</div>";
+            //document.body.insertAdjacentHTML("afterBegin", div);
+
             if (flag == false)
                 return;
             flag = false;
-            System.Windows.Forms.MessageBox.Show(message4);
+            //doc.parentWindow.execScript("document.body.style.zoom='130%';");
+            webBrowser.StatusBar = true;
         }
         bool flag = true;
 
         public void OnDocumentComplete(object pDisp, ref object URL)
         {
+            document = (HTMLDocument)webBrowser.Document;
+            doc = document as mshtml.HTMLDocument;
 
+            webBrowser.StatusBar = false;
+            //webBrowser.StatusText = "qwe";
             //System.Windows.Forms.MessageBox.Show("");
             pc_sdk.Start();
             pc_sdk.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
@@ -94,6 +108,7 @@ namespace BHO_HelloWorld
                 //webBrowser.
                 webBrowser = (WebBrowser)site;
                 webBrowser.DocumentComplete += new DWebBrowserEvents2_DocumentCompleteEventHandler(this.OnDocumentComplete);
+                
                 webBrowser.BeforeNavigate2 += new DWebBrowserEvents2_BeforeNavigate2EventHandler(this.OnBeforeNavigate2);
                 
             }
