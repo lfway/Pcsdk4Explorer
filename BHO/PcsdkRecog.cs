@@ -80,6 +80,11 @@ namespace BHO_HelloWorld
             fa.QueryProfile(0, out pf);
             // capturing
             capture = new UtilMCapture(session);
+            // set resolution
+            PXCMSizeU32 size = new PXCMSizeU32();
+            size.height=240*2;
+            size.width=320*2;
+            capture.SetFilter(PXCMImage.ImageType.IMAGE_TYPE_COLOR, ref size );
             sts = capture.LocateStreams(ref pf.inputs);
             if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
             {
@@ -151,7 +156,7 @@ namespace BHO_HelloWorld
             fa.Dispose();
             capture.Dispose();
             session.Dispose();
-            GC.Collect();
+            //GC.Collect();
         }
 
         //GestureDetector mGestureDetector = new GestureDetector();
@@ -159,7 +164,7 @@ namespace BHO_HelloWorld
         [HandleProcessCorruptedStateExceptions]
         void bw_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            GC.Collect();
+            //GC.Collect();
             int fid;
             uint fidx = 0;
             fa.QueryFace(fidx, out fid, out timeStamp);
@@ -173,9 +178,6 @@ namespace BHO_HelloWorld
 
             if (sts != pxcmStatus.PXCM_STATUS_ITEM_UNAVAILABLE )
             {
-
-
-                
                 //Do something with the landmarks
                 List<PXCMPoint3DF32> face_elements = new List<PXCMPoint3DF32>();
                 PXCMPoint3DF32 eye_left_outer = landmark_data[0].position;

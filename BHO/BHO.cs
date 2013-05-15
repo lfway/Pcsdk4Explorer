@@ -77,7 +77,7 @@ namespace BHO_HelloWorld
             else
                 if (eyes_distance < 100)
                     webBrowser.ExecWB(OLECMDID.OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT, ref vZoom1, IntPtr.Zero);
-
+            /*
             // === 2. Turn ===
             int left_ctr = 0;
             int right_ctr = 0;
@@ -128,20 +128,21 @@ namespace BHO_HelloWorld
                 }
             }
             //webBrowser.FullScreen = true;
-
+            */
             counter_++;
 
             //webBrowser.StatusBar = true;
-            
-            webBrowser.StatusText = counter_.ToString() + ",dist: " + eyes_distance.ToString() + ", turn history: " + turn_history + ", left: " + left_ctr.ToString() + ", right: " + right_ctr.ToString() +
-                ", control: " + eye_left_outer.x;
+
+            webBrowser.StatusText = counter_.ToString() + ",dist: " + eyes_distance.ToString() + ", turn history: " + turn_history;
+          //      + ", left: " + left_ctr.ToString() + ", right: " + right_ctr.ToString() +
+             //   ", control: " + eye_left_outer.x;
         }
         bool flag = true;
 
         bool FirstRun = true;
         public void OnDocumentComplete(object pDisp, ref object URL)
         {
-            allow_receive_result = true;
+            
             if (FirstRun == true)
             {
                 webBrowser.Navigate("http://lenta.ru");
@@ -154,9 +155,13 @@ namespace BHO_HelloWorld
                 //System.Windows.Forms.MessageBox.Show("");
 
                 pc_sdk.Start();
-                //pc_sdk.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
+                pc_sdk.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
             }
-            pc_sdk.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
+            //pc_sdk.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
+            lock (this)
+            {
+                allow_receive_result = true;
+            }
             FirstRun = false;
         }
 
