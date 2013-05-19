@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace BHO_HelloWorld
+namespace Pcsdk4Explorer
 {
     class FacePosition
     {

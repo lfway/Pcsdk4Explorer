@@ -4,7 +4,7 @@ using System.Text;
 
 using System.Runtime.InteropServices;
 
-namespace BHO_HelloWorld
+namespace Pcsdk4Explorer
 {
     [
     ComVisible(true),

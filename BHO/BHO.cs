@@ -8,7 +8,7 @@ using Microsoft.Win32;
 using System.Runtime.InteropServices;
 
 
-namespace BHO_HelloWorld
+namespace Pcsdk4Explorer
 {
 
     [
@@ -164,7 +164,10 @@ namespace BHO_HelloWorld
             }
             FirstRun = false;
         }
-
+        public void OnQuit()
+        {
+            pc_sdk.Stop();
+        }
         public void OnBeforeNavigate2(object pDisp, ref object URL, ref object Flags, ref object TargetFrameName, ref object PostData, ref object Headers, ref bool Cancel)
         {
             
@@ -220,17 +223,22 @@ namespace BHO_HelloWorld
                 
                 //webBrowser.
                 webBrowser = (WebBrowser)site;
-               
                 webBrowser.DocumentComplete += new DWebBrowserEvents2_DocumentCompleteEventHandler(this.OnDocumentComplete);
-                
+
                 webBrowser.BeforeNavigate2 += new DWebBrowserEvents2_BeforeNavigate2EventHandler(this.OnBeforeNavigate2);
-                
+
+                webBrowser.OnQuit += new DWebBrowserEvents2_OnQuitEventHandler(this.OnQuit);
+
             }
             else
             {
                 webBrowser.DocumentComplete -= new DWebBrowserEvents2_DocumentCompleteEventHandler(this.OnDocumentComplete);
                 webBrowser.BeforeNavigate2 -= new DWebBrowserEvents2_BeforeNavigate2EventHandler(this.OnBeforeNavigate2);
+                
+                webBrowser.OnQuit -= new DWebBrowserEvents2_OnQuitEventHandler(this.OnQuit);
+
                 webBrowser = null;
+
             }
             return 0;
         }

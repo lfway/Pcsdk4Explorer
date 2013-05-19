@@ -16,7 +16,7 @@ using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 //using System.Drawing.Imaging;
 
-namespace BHO_HelloWorld
+namespace Pcsdk4Explorer
 {
     public class PcsdkRecog
     {
@@ -49,7 +49,15 @@ namespace BHO_HelloWorld
         BackgroundWorker bw1 = new BackgroundWorker();
 
         bool started = false;
+        public void Stop()
+        {
+            bw1.DoWork -= new DoWorkEventHandler(bw_DoWork);
+            bw1.ProgressChanged -= new ProgressChangedEventHandler(bw_ProgressChanged);
 
+            detection.Dispose();
+            capture.Dispose();
+            session.Dispose();
+        }
         public void Start()
         {
             if (started == true)
@@ -148,7 +156,7 @@ namespace BHO_HelloWorld
                 }
                 catch
                 {
-                    MessageBox.Show("Frame capturing Error!");
+                    //MessageBox.Show("Frame capturing Error!");
                     return;
                 }
             }
