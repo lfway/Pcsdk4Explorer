@@ -85,10 +85,10 @@ namespace Pcsdk4Explorer
         }
 
 
-        bool turned_left = false;
-        bool turned_right = false;
-        int turned_left_ampl = 0;
-        int turned_right_ampl = 0;
+        //bool turned_left = false;
+        //bool turned_right = false;
+        //int turned_left_ampl = 0;
+        //int turned_right_ampl = 0;
         int turned_abs_old = 0;
         int turned_wait = 0;
 
@@ -108,14 +108,16 @@ namespace Pcsdk4Explorer
                 return;
 
 
-
-            if (turned_wait > 0)
+            lock (this)
             {
-                turned_wait--;
-                if (turned_wait == 0)
+                if (turned_wait > 0)
                 {
-                    head_turned_left = false;
-                    head_turned_right = false;
+                    turned_wait--;
+                    if (turned_wait == 0)
+                    {
+                        head_turned_left = false;
+                        head_turned_right = false;
+                    }
                 }
             }
 
@@ -126,18 +128,6 @@ namespace Pcsdk4Explorer
             int rounded_ = 0;
             int hor_ampl = 0;
 
-
-                /*if (allowed == true)
-                    counter_wait_2 = 0;
-                else
-                {
-                    counter_wait_2--;
-                    if (counter_wait_2 == 0)
-                    {
-                        allow_receive_result = true;
-                        allowed = true;
-                    }
-                }*/
             lock (this)
             {
                 if (counter_wait_2 > 0)
@@ -146,8 +136,7 @@ namespace Pcsdk4Explorer
                     return;
                 }
             }
-            /*if (allowed == false)
-                return;*/
+
             if (message4.Count != 6)
                 return;
 
@@ -161,20 +150,11 @@ namespace Pcsdk4Explorer
             //PXCMPoint3DF32 eye_left = GetCenter(eye_left_outer, eye_left_inner);
             //PXCMPoint3DF32 eye_right = GetCenter(eye_right_outer, eye_right_inner);
             //PXCMPoint3DF32 mouth = GetCenter(eye_mouth_left, eye_mouth_right);
+            // stange bug
             PXCMPoint3DF32 eye_left = GetCenter(eye_left_outer, eye_left_inner);
             PXCMPoint3DF32 eye_right = GetCenter(eye_right_outer, eye_right_inner);
             PXCMPoint3DF32 mouth = GetCenter(eye_left_inner, eye_mouth_right);
-
-
-           // webBrowser.StatusText = eye_left.x.ToString() + ", " + eye_left.y.ToString() + ", " +
-           //     eye_right.x.ToString() + ", " + eye_right.y.ToString() + ", " +
-           //     mouth.x.ToString() + ", " + mouth.y.ToString();
-                
-               
-
-
-
-
+            
             f_pos = new FacePosition(eye_left, eye_right, mouth);
 
             int eyes_distance = f_pos.getEyesDist();
@@ -187,12 +167,33 @@ namespace Pcsdk4Explorer
 
             int left_ctr = 0, right_ctr = 0;
 
-            
-            
-            // detect turn nef/right
-            
-            //head_turned_left = false;
-            //head_turned_right = false;
+
+
+            // ===         ===
+            // === 1. Zoom ===
+            // ===         ===
+            object vZoom1 = 100;
+            object vZoom2 = 130;
+
+            if (eyes_distance > 110 && dist_old <= 110)
+            {
+                webBrowser.ExecWB(OLECMDID.OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT, ref vZoom2, IntPtr.Zero);
+                //return;
+            }
+            else
+                if (eyes_distance < 100 && dist_old >= 100)
+                {
+                    webBrowser.ExecWB(OLECMDID.OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT, ref vZoom1, IntPtr.Zero);
+                    //return;
+                }
+            lock (this)
+            {
+                dist_old = eyes_distance;
+            }
+
+            // ===                    ===
+            // === 2. Turn left/right ===
+            // ===                    ===
             int turn_left_right = 0;
             lock (this)
             {
@@ -203,9 +204,9 @@ namespace Pcsdk4Explorer
                     {
                         if (hor_ampl < 0)
                         {
-                             head_turned_right = true;
-                             turn_left_right = 1;
-                             turned_abs_old = 0;
+                            head_turned_right = true;
+                            turn_left_right = 1;
+                            turned_abs_old = 0;
                         }
                         if (hor_ampl > 0)
                         {
@@ -216,171 +217,82 @@ namespace Pcsdk4Explorer
                         turned_wait = 20;
                     }
                 }
-                /*if (Math.Abs(hor_ampl) < 3)
+
+
+                if (turned_wait > 0)
                 {
-                    if(head_turned_right == true)
+                    if (head_turned_right == true && head_turned_left == true)
                     {
-                        turn_left_right = 1;
-                    }
-                    if (head_turned_left == true)
-                    {
-                        turn_left_right = 2;
-                    }
-                }*/
-            }
-
-            if (turned_wait > 0)
-            {
-                if (head_turned_right == true && head_turned_left == true)
-                //if (turn_left_right == 1 || turn_left_right == 2)
-                {
-                    lock (this)
-                    {
-                        //data += "Gesture";
-                        head_turned_left = false;
-                        head_turned_right = false;
-                        turned_wait = 0;
-                        allow_receive_result = false;
-                        turned_abs_old = 0;
-                    }
-                    try
-                    {
-                        if (turn_left_right == 1)
-                            webBrowser.GoBack();
-                        if (turn_left_right == 2)
-                            webBrowser.GoForward();
-                    }
-                    catch (Exception e)
-                    {
-                        data += ".CATCH";
-                        //mSavedAction = back_next;
-                        allow_receive_result = true;
-                        //webBrowser.StatusText = e.ToString();
-                        //return;
-                    }
-                }
-            }
-
-
-            turned_abs_old = Math.Abs(hor_ampl);
-
-
-            int AmplitudeInclined = GestureDetector.instance.mAmplitudeIncline;
-            webBrowser.StatusText = data + ", " + AmplitudeInclined.ToString() + ", " + hor_ampl + ", " + turned_wait.ToString();
-            //allow_receive_result = false;
-
-            return;
-
-            //       ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ 
-            ////////////////////////////////////////////////////////////////////////////
-            ////////////////////////////////////////////////////////////////////////////
-            ////////////////////////////////////////////////////////////////////////////
-            ////////////////////////////////////////////////////////////////////////////
-
-
-
-            // === 1. Zoom ===
-            object vZoom1 = 100;
-            object vZoom2 = 130;
-
-            if (eyes_distance > 110 && dist_old <= 110)
-            {
-                webBrowser.ExecWB(OLECMDID.OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT, ref vZoom2, IntPtr.Zero);
-                goto Exit;
-            }
-            else
-                if (eyes_distance < 100 && dist_old >= 100)
-                {
-                    webBrowser.ExecWB(OLECMDID.OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT, ref vZoom1, IntPtr.Zero);
-                    goto Exit;
-                }
-            dist_old = eyes_distance;
-
-                // === 2. Turn ===
-                /*
-                if (turn_history.Length >= 14)
-                {
-                    for (int i = 0; i < turn_history.Length; i++)
-                    {
-                        if (turn_history.Substring(i, 1) == "<")
-                            right_ctr++;
-                        if (turn_history.Substring(i, 1) == ">")
-                            left_ctr++;
-                    }
-
-                    int back_next = 0;
-                    if (left_ctr >= 4 && (left_ctr > (double)right_ctr * 1.7))
-                        back_next = 1;
-                    else if (right_ctr >= 4 && (right_ctr > (double)left_ctr * 1.7))
-                        back_next = 2;
-
-                    if (back_next != 0)
-                    {
-                        allow_receive_result = false;
-                        counter_wait_2 = 7;
+                        lock (this)
+                        {
+                            head_turned_left = false;
+                            head_turned_right = false;
+                            turned_wait = 0;
+                            allow_receive_result = false;
+                            turned_abs_old = 0;
+                        }
                         try
                         {
-                            if (back_next == 1)
+                            if (turn_left_right == 1)
                                 webBrowser.GoBack();
-                            if (back_next == 2)
+                            if (turn_left_right == 2)
                                 webBrowser.GoForward();
                         }
                         catch (Exception e)
                         {
-                            //mSavedAction = back_next;
+                            data += ".CATCH";
                             allow_receive_result = true;
-                            //webBrowser.StatusText = e.ToString();
-                            //return;
-                        }
-                        goto Exit;
-                    }
-
-                }*/
-
-
-                // === 3. PageUp ===
-                if (round_history.Length >= 14)
-                {
-                    for (int i = 0; i < round_history.Length; i++)
-                    {
-                        if (round_history.Substring(i, 1) == "<")
-                            right_ctr++;
-                        if (round_history.Substring(i, 1) == ">")
-                            left_ctr++;
-                    }
-
-                    
-                    //int back_next = 0;
-                    
-                    if (left_ctr >= 4 && (left_ctr > (double)right_ctr * 1.6))
-                    {
-                        rounded_ = 1;
-                    }
-                    if (right_ctr >= 4 && (right_ctr > (double)left_ctr * 1.6))
-                    {
-                        rounded_ = 2;
-                    }
-
-                    {
-                        document = (HTMLDocument)webBrowser.Document;
-                        try
-                        {
-                            if(rounded_==0)
-                                doc.title = "Not Inclined";
-                            if (rounded_ == 1)
-                                doc.title = "Inclined Left";
-                            if (rounded_ == 2)
-                                doc.title = "Inclined Right";
-                        }
-                        catch (Exception e)
-                        {
-                            webBrowser.StatusText = e.ToString();
-                            return;
                         }
                     }
-                    
-                    //
                 }
+
+                turned_abs_old = Math.Abs(hor_ampl);
+            }
+            int AmplitudeInclined = GestureDetector.instance.mAmplitudeIncline;
+            webBrowser.StatusText = data + ", Frames: " + counter_.ToString() + ", Zoom: " + eyes_distance + ", Incline Angle: " + AmplitudeInclined.ToString() + ", Micro Turn: " + hor_ampl.ToString();
+
+
+            counter_++;
+            return;
+
+            // === 3. PageUp ===
+            /*if (round_history.Length >= 14)
+            {
+                for (int i = 0; i < round_history.Length; i++)
+                {
+                    if (round_history.Substring(i, 1) == "<")
+                        right_ctr++;
+                    if (round_history.Substring(i, 1) == ">")
+                        left_ctr++;
+                }
+
+                if (left_ctr >= 4 && (left_ctr > (double)right_ctr * 1.6))
+                {
+                    rounded_ = 1;
+                }
+                if (right_ctr >= 4 && (right_ctr > (double)left_ctr * 1.6))
+                {
+                    rounded_ = 2;
+                }
+
+                {
+                    document = (HTMLDocument)webBrowser.Document;
+                    try
+                    {
+                        if(rounded_==0)
+                            doc.title = "Not Inclined";
+                        if (rounded_ == 1)
+                            doc.title = "Inclined Left";
+                        if (rounded_ == 2)
+                            doc.title = "Inclined Right";
+                    }
+                    catch (Exception e)
+                    {
+                        webBrowser.StatusText = e.ToString();
+                        return;
+                    }
+                }
+            }*/
                 
 
             Exit:
