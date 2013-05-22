@@ -124,7 +124,7 @@ namespace Pcsdk4Explorer
                 try
                 {
                     GC.Collect();
-                    System.Threading.Thread.Sleep(20);
+                    System.Threading.Thread.Sleep(30);
                     // Read Image
                     sts = capture.ReadStreamAsync(images, out sps[0]);
                     if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
@@ -151,7 +151,7 @@ namespace Pcsdk4Explorer
                     /////////////////////////////////////////////////////////
                     bw1.ReportProgress(0);
 
-                    System.Threading.Thread.Sleep(30);
+                    System.Threading.Thread.Sleep(40);
                     foreach (PXCMScheduler.SyncPoint s in sps) if (s != null) s.Dispose();
                 }
                 catch
@@ -227,7 +227,7 @@ namespace Pcsdk4Explorer
                     //flag = true;
                 //}
             }
-            SendResult(null);
+           // SendResult(null);
         }
 
 

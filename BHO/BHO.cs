@@ -248,11 +248,23 @@ namespace Pcsdk4Explorer
 
                 turned_abs_old = Math.Abs(hor_ampl);
             }
-            int AmplitudeInclined = GestureDetector.instance.mAmplitudeIncline;
-            webBrowser.StatusText = data + ", Frames: " + counter_.ToString() + ", Zoom: " + eyes_distance + ", Incline Angle: " + AmplitudeInclined.ToString() + ", Micro Turn: " + hor_ampl.ToString();
 
 
-            counter_++;
+
+            string ANGLE;
+            string COUNTER;
+            string DATA;
+            lock (this)
+            {
+                ANGLE = GestureDetector.instance.mAmplitudeIncline.ToString();
+                COUNTER = counter_.ToString();
+                DATA = data;
+                counter_++;
+            }
+            webBrowser.StatusText = 
+                DATA + ", Frames: " + COUNTER + ", Zoom: " + eyes_distance.ToString() + ", Incline Angle: " + ANGLE + ", Micro Turn: " + hor_ampl.ToString();
+
+
             return;
 
             // === 3. PageUp ===
