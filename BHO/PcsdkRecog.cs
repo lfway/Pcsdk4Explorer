@@ -222,10 +222,12 @@ namespace Pcsdk4Explorer
                 //{
 
                 SendResult(face_elements);
+                return;
                     //SendResult(r.ToString());
                     //flag = true;
                 //}
             }
+            SendResult(null);
         }
 
 
