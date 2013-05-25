@@ -21,16 +21,20 @@ namespace Pcsdk4Explorer
     public class PcsdkRecog
     {
         // делегат
-        public delegate void MyNameDelegate(List<PXCMPoint3DF32> message);
+        //public delegate void MyNameDelegate(List<PXCMPoint3DF32> message);
+        public delegate void MyNameDelegate(int code);
         // событие
         public event MyNameDelegate MyNameCallback;
         // отправка детектированного события
         //private void SendResult(string message_to_send = "default")
-        private void SendResult(List<PXCMPoint3DF32> message_to_send)
+        // private void SendResult(List<PXCMPoint3DF32> message_to_send)
+        //{
+        //     MyNameCallback(message_to_send);
+        //}
+        private void SendResult(int message_to_send)
         {
             MyNameCallback(message_to_send);
-        } 
-
+        }
         pxcmStatus sts;
         PXCMSession session;
         PXCMBase fanalysis;
@@ -49,6 +53,19 @@ namespace Pcsdk4Explorer
         BackgroundWorker bw1 = new BackgroundWorker();
 
         bool started = false;
+        public void Pause(bool pause = true)
+        {
+            if (pause == true)
+            {
+                bw1.DoWork -= new DoWorkEventHandler(bw_DoWork);
+                bw1.ProgressChanged -= new ProgressChangedEventHandler(bw_ProgressChanged);
+            }
+            else
+            {
+                bw1.DoWork += new DoWorkEventHandler(bw_DoWork);
+                bw1.ProgressChanged += new ProgressChangedEventHandler(bw_ProgressChanged);
+            }
+        }
         public void Stop()
         {
             bw1.DoWork -= new DoWorkEventHandler(bw_DoWork);
@@ -62,7 +79,6 @@ namespace Pcsdk4Explorer
         {
             if (started == true)
             {
-                
                 return;
             }
             started = true;
@@ -70,7 +86,7 @@ namespace Pcsdk4Explorer
             bw1.ProgressChanged += new ProgressChangedEventHandler(bw_ProgressChanged);
             bw1.WorkerReportsProgress = true;
             bw1.WorkerSupportsCancellation = true;
-           
+
             // create instance
             sts = PXCMSession.CreateInstance(out session);
             if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
@@ -90,9 +106,9 @@ namespace Pcsdk4Explorer
             capture = new UtilMCapture(session);
             // set resolution
             PXCMSizeU32 size = new PXCMSizeU32();
-            size.height=240*2;
-            size.width=320*2;
-            capture.SetFilter(PXCMImage.ImageType.IMAGE_TYPE_COLOR, ref size );
+            size.height = 240 * 2;
+            size.width = 320 * 2;
+            capture.SetFilter(PXCMImage.ImageType.IMAGE_TYPE_COLOR, ref size);
             sts = capture.LocateStreams(ref pf.inputs);
             if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
             {
@@ -102,17 +118,22 @@ namespace Pcsdk4Explorer
             detection = (PXCMFaceAnalysis.Detection)fa.DynamicCast(PXCMFaceAnalysis.Detection.CUID);
             face_attribute = (PXCMFaceAnalysis.Attribute)fa.DynamicCast(PXCMFaceAnalysis.Attribute.CUID);
 
-            //background worker
-            
             bw1.RunWorkerAsync();
-             
         }
-        
+
         PXCMImage[] images = new PXCMImage[PXCMCapture.VideoStream.STREAM_LIMIT];
         PXCMScheduler.SyncPoint[] sps = new PXCMScheduler.SyncPoint[2];
         bool device_lost = false;
         Bitmap bmp;
         ulong timeStamp;
+
+        int turned_abs_old = 0;
+        int mWaitBackTurn = 0;
+
+        bool head_turned_left = false;
+        bool head_turned_right = false;
+
+        int dist_old = 0;
 
         [HandleProcessCorruptedStateExceptions]
         void bw_DoWork(object sender, DoWorkEventArgs e)
@@ -124,7 +145,7 @@ namespace Pcsdk4Explorer
                 try
                 {
                     GC.Collect();
-                    System.Threading.Thread.Sleep(30);
+                    System.Threading.Thread.Sleep(20);
                     // Read Image
                     sts = capture.ReadStreamAsync(images, out sps[0]);
                     if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
@@ -160,31 +181,40 @@ namespace Pcsdk4Explorer
                     return;
                 }
             }
-            
+
             fa.Dispose();
             capture.Dispose();
             session.Dispose();
             //GC.Collect();
         }
 
-        //GestureDetector mGestureDetector = new GestureDetector();
-        bool flag = false;
+        GestureDetector mGestureDetector = new GestureDetector();
+
         [HandleProcessCorruptedStateExceptions]
         void bw_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
+            //return;
             //GC.Collect();
             int fid;
             uint fidx = 0;
             fa.QueryFace(fidx, out fid, out timeStamp);
 
-            //Get face landmarks (eye, mouth, nose position)
-            PXCMFaceAnalysis.Landmark landmark = (PXCMFaceAnalysis.Landmark)fa.DynamicCast(PXCMFaceAnalysis.Landmark.CUID);
-            landmark.QueryProfile(1, out lpi);
-            landmark.SetProfile(ref lpi);
             PXCMFaceAnalysis.Landmark.LandmarkData[] landmark_data = new PXCMFaceAnalysis.Landmark.LandmarkData[7];
-            sts = landmark.QueryLandmarkData(fid, PXCMFaceAnalysis.Landmark.Label.LABEL_7POINTS, landmark_data);
-
-            if (sts != pxcmStatus.PXCM_STATUS_ITEM_UNAVAILABLE )
+            try
+            {
+                //Get face landmarks (eye, mouth, nose position)
+                PXCMFaceAnalysis.Landmark landmark = (PXCMFaceAnalysis.Landmark)fa.DynamicCast(PXCMFaceAnalysis.Landmark.CUID);
+                landmark.QueryProfile(1, out lpi);
+                landmark.SetProfile(ref lpi);
+                //PXCMFaceAnalysis.Landmark.LandmarkData[] landmark_data = new PXCMFaceAnalysis.Landmark.LandmarkData[7];
+                sts = landmark.QueryLandmarkData(fid, PXCMFaceAnalysis.Landmark.Label.LABEL_7POINTS, landmark_data);
+            }
+            catch
+            {
+                SendResult(0);
+                return;
+            }
+            if (sts != pxcmStatus.PXCM_STATUS_ITEM_UNAVAILABLE)
             {
                 //Do something with the landmarks
                 List<PXCMPoint3DF32> face_elements = new List<PXCMPoint3DF32>();
@@ -194,54 +224,126 @@ namespace Pcsdk4Explorer
                 PXCMPoint3DF32 eye_right_inner = landmark_data[3].position;
                 PXCMPoint3DF32 eye_mouth_left = landmark_data[4].position;
                 PXCMPoint3DF32 eye_mouth_right = landmark_data[5].position;
-                face_elements.Add(eye_left_outer);
-                face_elements.Add(eye_left_inner);
-                face_elements.Add(eye_right_outer);
-                face_elements.Add(eye_right_inner);
-                face_elements.Add(eye_mouth_left);
-                face_elements.Add(eye_mouth_right);
 
+                PXCMPoint3DF32 eye_left = GetCenter(eye_left_outer, eye_left_inner);
+                PXCMPoint3DF32 eye_right = GetCenter(eye_right_outer, eye_right_inner);
+                PXCMPoint3DF32 mouth = GetCenter(eye_left_inner, eye_mouth_right);
+                FacePosition f_pos = new FacePosition(eye_left, eye_right, mouth);
 
-             //   PXCMPoint3DF32 eye_left = GetCenter(eye_left_outer, eye_left_inner);
-              //  PXCMPoint3DF32 eye_right = GetCenter(eye_right_outer, eye_right_inner);
-              //  PXCMPoint3DF32 mouth = GetCenter(eye_mouth_left, eye_mouth_right);
+                int eyes_distance = f_pos.getEyesDist();
+                int res;
+                int hor_ampl = 0;
+                int angle_2 = 0;
+                lock (this)
+                {
+                    mGestureDetector.AddPosition(f_pos);
+                    mGestureDetector.Process(out res);
+                    angle_2 = mGestureDetector.mAmplitudeIncline;
+                    hor_ampl = mGestureDetector.mAmplitudeTurnHorizontal;
+                    
+                }
 
-              //  FacePosition f_pos = new FacePosition(eye_left, eye_right, mouth);
-               // GestureDetector.instance.AddPosition(f_pos);
+                //
+                // Detect zoom
+                //
 
-                //mGestureDetector. .AddPosition(f_pos);
+                int zoomed = 0;
+                if (eyes_distance > 110 && dist_old <= 110)
+                {
+                    zoomed = 3;
+                }
+                else
+                    if (eyes_distance < 100 && dist_old >= 100)
+                    {
+                        zoomed = 4;
+                    }
+                dist_old = eyes_distance;
+                if (zoomed == 3 || zoomed == 4)
+                {
+                    try
+                    {
+                        SendResult(zoomed);
+                    }
+                    finally
+                    {
 
-                //int result_gesture = 0;
-                //GestureDetector.instance.Process(out result_gesture);
-                //int r = mGestureDetector.GetResult();
+                    }
+                    return;
+                }
                 
-                //if(r > 0)
-                //    SendResult("Face detected");
 
-                //if (flag == false)
-                //{
+                //
+                // Detect turn
+                //
 
-                SendResult(face_elements);
+                int turn_left_right = 0;
+                lock (this)
+                {
+                    if (Math.Abs(hor_ampl) > 12)
+                    {
+                        if (Math.Abs(hor_ampl) < turned_abs_old)
+                        {
+                            if (hor_ampl < 0)
+                            {
+                                head_turned_right = true;
+                                turn_left_right = 1;
+                                turned_abs_old = 0;
+                            }
+                            if (hor_ampl > 0)
+                            {
+                                head_turned_left = true;
+                                turn_left_right = 2;
+                                turned_abs_old = 0;
+                            }
+                            mWaitBackTurn = 20;
+                        }
+                    }
+                }
+                turned_abs_old = Math.Abs(hor_ampl);
+                if (mWaitBackTurn > 0)
+                {
+                    if (head_turned_right == true && head_turned_left == true)
+                    {
+                        lock (this)
+                        {
+                            head_turned_left = false;
+                            head_turned_right = false;
+                            mWaitBackTurn = 0;
+                            turned_abs_old = 0;
+                        }
+                        try
+                        {
+                            if (turn_left_right == 1)
+                            {
+                                SendResult(1);
+                            }
+                            if (turn_left_right == 2)
+                            {
+                                SendResult(2);
+                            }
+                        }
+                        finally
+                        {
+
+                        }
+                    }
+                }
                 return;
-                    //SendResult(r.ToString());
-                    //flag = true;
-                //}
             }
-           // SendResult(null);
         }
 
 
         protected PXCMPoint3DF32 GetCenter(PXCMPoint3DF32 p1, PXCMPoint3DF32 p2)
         {
-	        int x2 = Math.Max((int)p1.x, (int)p2.x);
-	        int x1 = Math.Min((int)p1.x, (int)p2.x);
-	        int y2 = Math.Max((int)p1.y, (int)p2.y);
-	        int y1 = Math.Min((int)p1.y, (int)p2.y);
+            int x2 = Math.Max((int)p1.x, (int)p2.x);
+            int x1 = Math.Min((int)p1.x, (int)p2.x);
+            int y2 = Math.Max((int)p1.y, (int)p2.y);
+            int y1 = Math.Min((int)p1.y, (int)p2.y);
 
-	        PXCMPoint3DF32 center = new PXCMPoint3DF32();
-	        center.x	= x1 + (x2 - x1)/2;
-	        center.y	= y1 + (y2 - y1)/2;
-	        return center;
+            PXCMPoint3DF32 center = new PXCMPoint3DF32();
+            center.x = x1 + (x2 - x1) / 2;
+            center.y = y1 + (y2 - y1) / 2;
+            return center;
         }
     }
 }

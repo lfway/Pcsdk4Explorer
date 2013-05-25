@@ -49,9 +49,9 @@ namespace Pcsdk4Explorer
         {
             return (int)mCenterFace.x;
         }
-        public string m_incline_to;
-        public string m_turn_to;
-        public string m_z_to;
+        //public string m_incline_to;
+        //public string m_turn_to;
+        //public string m_z_to;
         public int getAndleEyes() { return mAngleLeftEyeToRightEye; }
 	    //public int getCenter() { return (int)mCenterFace.x; }
 	    public int getEyesDist() { return mEyesDistance; }
@@ -62,7 +62,7 @@ namespace Pcsdk4Explorer
         int MAX_FRAMES_COUNT = 15;
 
         //threaf safe
-        public static GestureDetector instance = new GestureDetector();
+        /*public static GestureDetector instance = new GestureDetector();
         private GestureDetector() { }
         public static GestureDetector Instance
         {
@@ -70,7 +70,7 @@ namespace Pcsdk4Explorer
             {
                 return instance;
             }
-        }
+        }*/
         //private object _lock;
         public void Clear()
         {
@@ -87,15 +87,18 @@ namespace Pcsdk4Explorer
         }
 
         public int m_Detected_Gesture = 0;
-        public void Process(out int result, out string str1, out string str2)
+        public void Process(out int result/*, out string str1, out string str2*/)
         {
-            str1 = "";
-            str2 = "";
             result = mFacePositionsSequence.Count;
             
             // incline delta
-            if (mFacePositionsSequence.Count < 2)
+            if (result < 2)
                 return;
+/*
+            if (mFacePositionsSequence[mFacePositionsSequence.Count - 1] == null || mFacePositionsSequence[mFacePositionsSequence.Count - 2] == null)
+                return;
+            //if (mFacePositionsSequence[mFacePositionsSequence.Count] == null)
+                //return;
 
             // incline amplitude & history
             int angle_eyes_prelast = mFacePositionsSequence[mFacePositionsSequence.Count - 2].getAndleEyes();
@@ -135,19 +138,23 @@ namespace Pcsdk4Explorer
                 mFacePositionsSequence[mFacePositionsSequence.Count - 1].m_z_to = ".";
             if (Math.Abs(delta_eyes_dist) > 100)
                 mFacePositionsSequence[mFacePositionsSequence.Count - 1].m_z_to = "E";
+            */
 
-            CalcAmplitudes();
-            CalcHistory();
-
-            string sequence_hor = "";
-            string sequence_round = "";
-            for (int i = 0; i < mFacePositionsSequence.Count; i++)
+            lock (this)
             {
-                sequence_hor += mFacePositionsSequence[i].m_turn_to;
-                sequence_round += mFacePositionsSequence[i].m_incline_to;
+                CalcAmplitudes();
             }
-            str1 = sequence_hor;
-            str2 = sequence_round;
+            //CalcHistory();
+
+            //string sequence_hor = "";
+            //string sequence_round = "";
+            //for (int i = 0; i < mFacePositionsSequence.Count; i++)
+            //{
+            //    sequence_hor += mFacePositionsSequence[i].m_turn_to;
+            //    sequence_round += mFacePositionsSequence[i].m_incline_to;
+            //}
+            //str1 = sequence_hor;
+            //str2 = sequence_round;
         }
         public int GetResult()
         {
@@ -158,28 +165,52 @@ namespace Pcsdk4Explorer
         //===
         protected void CalcHistory()
 	    {
+            /*
 		    mInclineHistory = "";
             mTurnHistory = "";
             mZHistory = "";
 		    for(int i = 0; i < mFacePositionsSequence.Count; i++)
 		    {
+                if (mFacePositionsSequence[i] == null)
+                    continue;
 			    mInclineHistory	+= mFacePositionsSequence[i].m_incline_to;
 			    mTurnHistory	+= mFacePositionsSequence[i].m_turn_to;
 			    mZHistory		+= mFacePositionsSequence[i].m_z_to;
 		    }
+            */
 	    }
         protected int CalcAmplitudes()
 	    {
 		    if( mFacePositionsSequence.Count < 2 )
 			    return -1;
-		    int angle_min = mFacePositionsSequence[0].getAndleEyes(), angle_max = mFacePositionsSequence[0].getAndleEyes();
-		    int turn_min = mFacePositionsSequence[0].getCenter(), turn_max = mFacePositionsSequence[0].getCenter();
+            int angle_min=0, angle_max=0;
+            /*
+             * int turn_min=0, turn_max=0;
+             * for (int i = 0; i < mFacePositionsSequence.Count; i++)
+            {
+                if (mFacePositionsSequence[i] != null)
+                {
+                    angle_min = mFacePositionsSequence[i].getAndleEyes(); 
+                    angle_max = mFacePositionsSequence[i].getAndleEyes();
+                    turn_min = mFacePositionsSequence[i].getCenter(); 
+                    turn_max = mFacePositionsSequence[i].getCenter();
+                }
+            }*/
+            //int angle_min = mFacePositionsSequence[0].getAndleEyes(), angle_max = mFacePositionsSequence[0].getAndleEyes();
+		    //int turn_min = mFacePositionsSequence[0].getCenter(), turn_max = mFacePositionsSequence[0].getCenter();
 
 
             int horizontal_delta = 0;
 
 		    for( int i = 0; i < mFacePositionsSequence.Count; i++)
 		    {
+                if (mFacePositionsSequence[i] == null)
+                    continue;
+                if (i > 0)
+                {
+                    if (mFacePositionsSequence[i-1] == null)
+                        continue;
+                }
 			    int angle_ = mFacePositionsSequence[i].getAndleEyes();
 			    if(angle_ < angle_min) angle_min = angle_;
 			    if(angle_ > angle_max) angle_max = angle_;
@@ -196,16 +227,16 @@ namespace Pcsdk4Explorer
             return 0;
 	    }
         //===
-        string mInclineHistory;
-	    string mTurnHistory;
-	    string mZHistory;
+        //string mInclineHistory;
+	    //string mTurnHistory;
+	    //string mZHistory;
 
         public int mAmplitudeTurnHorizontal;
         public int mAmplitudeTurnHorizontal_center=0;
 
 	    public int mAmplitudeIncline;
-	    int mAmplitudeUpDown;
-	    int mAmplitudeZdistance;
+	    //int mAmplitudeUpDown;
+	    //int mAmplitudeZdistance;
 
     }
 }
