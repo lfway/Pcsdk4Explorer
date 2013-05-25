@@ -49,6 +49,10 @@ namespace Pcsdk4Explorer
         {
             return (int)mCenterFace.x;
         }
+        public int getCenterV()
+        {
+            return (int)mCenterFace.y;
+        }
         //public string m_incline_to;
         //public string m_turn_to;
         //public string m_z_to;
@@ -140,10 +144,10 @@ namespace Pcsdk4Explorer
                 mFacePositionsSequence[mFacePositionsSequence.Count - 1].m_z_to = "E";
             */
 
-            lock (this)
-            {
+            //lock (this)
+            //{
                 CalcAmplitudes();
-            }
+           // }
             //CalcHistory();
 
             //string sequence_hor = "";
@@ -200,10 +204,12 @@ namespace Pcsdk4Explorer
 		    //int turn_min = mFacePositionsSequence[0].getCenter(), turn_max = mFacePositionsSequence[0].getCenter();
 
 
-            int horizontal_delta = 0;
+            int horizontal_delta = 0, vertical_delta = 0;
+
 
 		    for( int i = 0; i < mFacePositionsSequence.Count; i++)
 		    {
+                //проверки
                 if (mFacePositionsSequence[i] == null)
                     continue;
                 if (i > 0)
@@ -211,16 +217,30 @@ namespace Pcsdk4Explorer
                     if (mFacePositionsSequence[i-1] == null)
                         continue;
                 }
+
+                // амплитуда угла
 			    int angle_ = mFacePositionsSequence[i].getAndleEyes();
 			    if(angle_ < angle_min) angle_min = angle_;
 			    if(angle_ > angle_max) angle_max = angle_;
 
+                //амплитуда горизонтального смещения
                 if (i > 0)
                 {
                     int d = mFacePositionsSequence[i].getCenter() - mFacePositionsSequence[i - 1].getCenter();
                     horizontal_delta += d;
                 }
+
+                //амплитуда вертикального смещения
+                if (i > 0)
+                {
+                    int d = mFacePositionsSequence[i].getCenterV() - mFacePositionsSequence[i - 1].getCenterV();
+                    vertical_delta += d;
+                }
+
+
 		    }
+
+            mAmplitudeVertical = vertical_delta;
 		    mAmplitudeIncline = angle_max - angle_min;
             mAmplitudeTurnHorizontal = horizontal_delta;
 
@@ -232,6 +252,7 @@ namespace Pcsdk4Explorer
 	    //string mZHistory;
 
         public int mAmplitudeTurnHorizontal;
+        public int mAmplitudeVertical;
         public int mAmplitudeTurnHorizontal_center=0;
 
 	    public int mAmplitudeIncline;

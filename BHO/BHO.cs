@@ -19,12 +19,12 @@ namespace Pcsdk4Explorer
         WebBrowser webBrowser;
         HTMLDocument document;
         PcsdkRecog pc_sdk = new PcsdkRecog();
-        //mshtml.HTMLDocument doc;
+        mshtml.HTMLDocument doc;
         int counter_ = 0;
         
         //bool allow_receive_result = true;
 
-        private void ReceiveResult(int code)
+        private void ReceiveResult(int code, string message)
         {
             /*bool allowed = false;
             lock (this)
@@ -35,8 +35,8 @@ namespace Pcsdk4Explorer
             if (allowed == false)
                 return;*/
 
-            webBrowser.StatusText = counter_.ToString();
-
+           // webBrowser.StatusText = message;
+            //return;
             if (code > 0)
             {
                 object vZoom2 = 130;
@@ -44,6 +44,10 @@ namespace Pcsdk4Explorer
 
                 try
                 {
+
+                    //webBrowser.ExecWB(OLECMDID.
+                   // OLECMDID.OLECMDID_OPTICAL_ZOOM
+                    /*
                     if (code == 1)
                         webBrowser.GoBack();
                     if (code == 2)
@@ -59,6 +63,31 @@ namespace Pcsdk4Explorer
                         //}
                     if (code == 5)
                         webBrowser.GoHome();
+                    */
+                    if (code == 6)
+                    {
+                        document.body.scrollIntoView(false);
+                       // webBrowser.Top = 1000;
+                       // doc.parentWindow.window.scrollTo( 100, -1200);
+                        //doc.execCommand("window.scrollTo(0, document.body.offsetHeight)");
+                     //   document.parentWindow.scrollTo(0, int.MaxValue);
+                        //doc.parentWindow.scrollTo(0, 0);
+                    }
+                    if ( code == 7)
+                    {
+                        document.body.scrollIntoView(true);
+                       // doc.execCommand("window.scrollTo(0, document.body.offsetHeight)");
+
+                       // doc.parentWindow.window.scroll(0, 1200);
+                       // webBrowser.Document Top = 1000;
+                        //d//ocument.ex
+                       // document.parentWindow.scrollTo(0, int.MaxValue);
+                        //window.scrollTo(0, document.body.offsetHeight);
+                      //  webBrowser.Document. Body.ScrollIntoView(false);
+                        //doc.parentWindow.scrollTo(0, int.MaxValue);
+                        //doc.
+                    }
+
                 }
                 catch
                 {
@@ -73,8 +102,8 @@ namespace Pcsdk4Explorer
         bool FirstRun = true;
         public void OnDocumentComplete(object pDisp, ref object URL)
         {
-            lock (this)
-            {
+            //lock (this)
+            //{
                 if (FirstRun == true)
                 {
                     webBrowser.Navigate("http://lenta.ru");
@@ -89,7 +118,7 @@ namespace Pcsdk4Explorer
                 //allow_receive_result = true;
                 //System.Threading.Thread.Sleep(10);
                 FirstRun = false;
-            }
+            //}
         }
         public void OnQuit()
         {

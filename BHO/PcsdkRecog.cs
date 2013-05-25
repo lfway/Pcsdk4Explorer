@@ -22,7 +22,7 @@ namespace Pcsdk4Explorer
     {
         // делегат
         //public delegate void MyNameDelegate(List<PXCMPoint3DF32> message);
-        public delegate void MyNameDelegate(int code);
+        public delegate void MyNameDelegate(int code, string message);
         // событие
         public event MyNameDelegate MyNameCallback;
         // отправка детектированного события
@@ -31,9 +31,9 @@ namespace Pcsdk4Explorer
         //{
         //     MyNameCallback(message_to_send);
         //}
-        private void SendResult(int message_to_send)
+        private void SendResult(int message_to_send, string message2 = "")
         {
-            MyNameCallback(message_to_send);
+            MyNameCallback(message_to_send, message2);
         }
         pxcmStatus sts;
         PXCMSession session;
@@ -128,11 +128,15 @@ namespace Pcsdk4Explorer
         ulong timeStamp;
 
         int turned_abs_old = 0;
+        int turned_vert_abs_old = 0;
         int mWaitBackTurn = 0;
+        int mWaitBackVertical = 0;
 
         bool head_turned_left = false;
         bool head_turned_right = false;
-
+        bool head_turned_up = false;
+        bool head_turned_down = false;
+        
         bool mTurnToIncline = false;
 
         int dist_old = 0;
@@ -235,6 +239,7 @@ namespace Pcsdk4Explorer
                 int eyes_distance = f_pos.getEyesDist();
                 int res;
                 int hor_ampl = 0;
+                int vert_ampl = 0;
                 int angle_2 = 0;
                 lock (this)
                 {
@@ -242,7 +247,7 @@ namespace Pcsdk4Explorer
                     mGestureDetector.Process(out res);
                     angle_2 = mGestureDetector.mAmplitudeIncline;
                     hor_ampl = mGestureDetector.mAmplitudeTurnHorizontal;
-                    
+                    vert_ampl = mGestureDetector.mAmplitudeVertical;
                     
                 }
 
@@ -304,10 +309,11 @@ namespace Pcsdk4Explorer
                             else
                                 mTurnToIncline = false;
                             mWaitBackTurn = 20;
+                            mWaitBackVertical = 0;
                         }
                     }
                 }
-                turned_abs_old = Math.Abs(hor_ampl);
+                /*turned_abs_old = Math.Abs(hor_ampl);
                 if (mWaitBackTurn > 0)
                 {
                     if (head_turned_right == true && head_turned_left == true)
@@ -339,8 +345,67 @@ namespace Pcsdk4Explorer
 
                         }
                     }
+                    return;
+                }*/
+
+
+                //
+                // Detect turn up / down
+                //
+
+                int turn_up_down = 0;
+                lock (this)
+                {
+                    if (Math.Abs(vert_ampl) > 12)
+                    {
+                        if (Math.Abs(vert_ampl) < turned_vert_abs_old)
+                        {
+                            if (vert_ampl < 0)
+                            {
+                                head_turned_up = true;
+                                turn_up_down = 1;
+                                turned_vert_abs_old = 0;
+                            }
+                            if (vert_ampl > 0)
+                            {
+                                head_turned_down = true;
+                                turn_up_down = 2;
+                                turned_vert_abs_old = 0;
+
+                            }
+                            mWaitBackVertical = 20;
+                            mWaitBackTurn = 0;
+                        }
+                    }
                 }
-                return;
+                turned_vert_abs_old = Math.Abs(vert_ampl);
+                if (mWaitBackVertical > 0)
+                {
+                    if (head_turned_up == true && head_turned_down == true)
+                    {
+                        lock (this)
+                        {
+                            head_turned_up = false;
+                            head_turned_down = false;
+                            mWaitBackTurn = 0;
+                            turned_vert_abs_old = 0;
+                        }
+                        try
+                        {
+                            if (turn_up_down == 1)
+                            {
+                                SendResult(6, vert_ampl.ToString());
+                            }
+                            if (turn_up_down == 2)
+                            {
+                                SendResult(7);
+                            }
+                        }
+                        finally{}
+                    }
+                }
+                //return;
+                //SendResult(6, vert_ampl.ToString());
             }
         }
 
