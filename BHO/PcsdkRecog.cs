@@ -133,6 +133,8 @@ namespace Pcsdk4Explorer
         bool head_turned_left = false;
         bool head_turned_right = false;
 
+        bool mTurnToIncline = false;
+
         int dist_old = 0;
 
         [HandleProcessCorruptedStateExceptions]
@@ -241,6 +243,7 @@ namespace Pcsdk4Explorer
                     angle_2 = mGestureDetector.mAmplitudeIncline;
                     hor_ampl = mGestureDetector.mAmplitudeTurnHorizontal;
                     
+                    
                 }
 
                 //
@@ -294,7 +297,12 @@ namespace Pcsdk4Explorer
                                 head_turned_left = true;
                                 turn_left_right = 2;
                                 turned_abs_old = 0;
+
                             }
+                            if (angle_2 > 8)
+                                mTurnToIncline = true;
+                            else
+                                mTurnToIncline = false;
                             mWaitBackTurn = 20;
                         }
                     }
@@ -313,13 +321,17 @@ namespace Pcsdk4Explorer
                         }
                         try
                         {
-                            if (turn_left_right == 1)
+                            if (turn_left_right == 1 && mTurnToIncline == false)
                             {
                                 SendResult(1);
                             }
-                            if (turn_left_right == 2)
+                            if (turn_left_right == 2 && mTurnToIncline == false)
                             {
                                 SendResult(2);
+                            }
+                            if (turn_left_right > 0 && mTurnToIncline == true)
+                            {
+                                SendResult(5);
                             }
                         }
                         finally

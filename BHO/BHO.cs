@@ -57,7 +57,8 @@ namespace Pcsdk4Explorer
                         //{
                             //allow_receive_result = false;
                         //}
-
+                    if (code == 5)
+                        webBrowser.GoHome();
                 }
                 catch
                 {
