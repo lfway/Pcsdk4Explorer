@@ -14,6 +14,8 @@ using System.IO;
 
 using System.Diagnostics;
 using System.Runtime.ExceptionServices;
+
+using System.Threading;
 //using System.Drawing.Imaging;
 
 namespace Pcsdk4Explorer
@@ -141,6 +143,8 @@ namespace Pcsdk4Explorer
 
         int dist_old = 0;
 
+        Thread thread;
+
         [HandleProcessCorruptedStateExceptions]
         void bw_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -151,7 +155,7 @@ namespace Pcsdk4Explorer
                 try
                 {
                     GC.Collect();
-                    System.Threading.Thread.Sleep(20);
+                    System.Threading.Thread.Sleep(5);
                     // Read Image
                     sts = capture.ReadStreamAsync(images, out sps[0]);
                     if (sts < pxcmStatus.PXCM_STATUS_NO_ERROR)
@@ -178,7 +182,7 @@ namespace Pcsdk4Explorer
                     /////////////////////////////////////////////////////////
                     bw1.ReportProgress(0);
 
-                    System.Threading.Thread.Sleep(40);
+                    System.Threading.Thread.Sleep(45);
                     foreach (PXCMScheduler.SyncPoint s in sps) if (s != null) s.Dispose();
                 }
                 catch
@@ -217,7 +221,7 @@ namespace Pcsdk4Explorer
             }
             catch
             {
-                SendResult(0);
+                //SendResult(0);
                 return;
             }
             if (sts != pxcmStatus.PXCM_STATUS_ITEM_UNAVAILABLE)
@@ -270,6 +274,7 @@ namespace Pcsdk4Explorer
                 {
                     try
                     {
+                        //thread = new Thread( SendResult);
                         SendResult(zoomed);
                     }
                     finally
@@ -281,10 +286,13 @@ namespace Pcsdk4Explorer
                 }
                 
 
+
+
                 //
                 // Detect turn
                 //
-
+                if (mWaitBackTurn > 0) mWaitBackTurn--;
+                if (mWaitBackVertical > 0) mWaitBackVertical--;
                 int turn_left_right = 0;
                 lock (this)
                 {
@@ -358,7 +366,7 @@ namespace Pcsdk4Explorer
                 int turn_up_down = 0;
                 lock (this)
                 {
-                    if (Math.Abs(vert_ampl) > 12)
+                    if (Math.Abs(vert_ampl) > 20)
                     {
                         if (Math.Abs(vert_ampl) < turned_vert_abs_old)
                         {

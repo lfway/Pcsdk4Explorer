@@ -23,65 +23,60 @@ namespace Pcsdk4Explorer
         int counter_ = 0;
         
         //bool allow_receive_result = true;
-
+        int stop = 0;
         private void ReceiveResult(int code, string message)
         {
-            /*bool allowed = false;
             lock (this)
             {
-                counter_++;
-                allowed = allow_receive_result;
-            }
-            if (allowed == false)
-                return;*/
-            if (code == 0)
-            {
-                webBrowser.StatusText = message;
-                return;
-            }
-            //return;
-            if (code > 0)
-            {
-                object vZoom2 = 130;
-                object vZoom1 = 100;
-
-                try
+                if (stop > 10)
                 {
-
-                    //webBrowser.ExecWB(OLECMDID.
-                   // OLECMDID.OLECMDID_OPTICAL_ZOOM
-                    
-                    if (code == 1)
-                        webBrowser.GoBack();
-                    if (code == 2)
-                        webBrowser.GoForward();
-                    if (code == 3)
-                        webBrowser.ExecWB(OLECMDID.OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT, ref vZoom2, IntPtr.Zero);
-                    if (code == 4)
-                        webBrowser.ExecWB(OLECMDID.OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT, ref vZoom1, IntPtr.Zero);
-                    if (code == 5)
-                        webBrowser.GoHome();
-                    
-                    if (code == 6)
-                    {
-                        /*webBrowser.
-                        document.parentWindow.*/
-                        document = (HTMLDocument)webBrowser.Document;
-                        document.body.scrollIntoView(true);
-                    }
-                    if ( code == 7)
-                    {
-                        document = (HTMLDocument)webBrowser.Document;
-                        document.body.scrollIntoView(false);
-                    }
-
+                    stop--;
+                    webBrowser.StatusText = message;
+                    return;
                 }
-                catch
+                if (code == 0)
                 {
-                   // lock (this)
-                   // {
-                   //     allow_receive_result = true;
-                   // }
+                    webBrowser.StatusText = message;
+                    return;
+                }
+                else
+                {
+                    object vZoom2 = 130;
+                    object vZoom1 = 100;
+                    try
+                    {
+                        if (code == 1)
+                        {
+                            webBrowser.GoBack();
+                            stop = 15;
+                        }
+                        if (code == 2)
+                        {
+                            webBrowser.GoForward();
+                            stop = 15;
+                        }
+                        if (code == 3)
+                            webBrowser.ExecWB(OLECMDID.OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT, ref vZoom2, IntPtr.Zero);
+                        if (code == 4)
+                            webBrowser.ExecWB(OLECMDID.OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT, ref vZoom1, IntPtr.Zero);
+                        if (code == 5)
+                        {
+                            webBrowser.GoHome();
+                            stop = 15;
+                        }
+                        if (code == 6)
+                        {
+                            document = (HTMLDocument)webBrowser.Document;
+                            document.body.scrollIntoView(true);
+                        }
+                        if (code == 7)
+                        {
+                            document = (HTMLDocument)webBrowser.Document;
+                            document.body.scrollIntoView(false);
+                        }
+
+                    }
+                    catch { }
                 }
             }
         }
