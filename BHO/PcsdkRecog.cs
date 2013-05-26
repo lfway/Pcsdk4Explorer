@@ -276,7 +276,8 @@ namespace Pcsdk4Explorer
                     {
 
                     }
-                    return;
+                    goto Exit;
+                    //return;
                 }
                 
 
@@ -313,7 +314,7 @@ namespace Pcsdk4Explorer
                         }
                     }
                 }
-                /*turned_abs_old = Math.Abs(hor_ampl);
+                turned_abs_old = Math.Abs(hor_ampl);
                 if (mWaitBackTurn > 0)
                 {
                     if (head_turned_right == true && head_turned_left == true)
@@ -345,8 +346,9 @@ namespace Pcsdk4Explorer
 
                         }
                     }
-                    return;
-                }*/
+                   // return;
+                    goto Exit;
+                }
 
 
                 //
@@ -394,7 +396,7 @@ namespace Pcsdk4Explorer
                         {
                             if (turn_up_down == 1)
                             {
-                                SendResult(6, vert_ampl.ToString());
+                                SendResult(6);
                             }
                             if (turn_up_down == 2)
                             {
@@ -405,7 +407,9 @@ namespace Pcsdk4Explorer
                     }
                 }
                 //return;
-                //SendResult(6, vert_ampl.ToString());
+            Exit:
+                string message_ = "x: " + hor_ampl.ToString() + ", y: " + vert_ampl.ToString() + ", dist: " + eyes_distance.ToString() + ", angle: " + angle_2.ToString();
+                SendResult(0, message_);
             }
         }
 

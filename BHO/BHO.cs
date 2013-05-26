@@ -34,8 +34,11 @@ namespace Pcsdk4Explorer
             }
             if (allowed == false)
                 return;*/
-
-           // webBrowser.StatusText = message;
+            if (code == 0)
+            {
+                webBrowser.StatusText = message;
+                return;
+            }
             //return;
             if (code > 0)
             {
@@ -47,7 +50,7 @@ namespace Pcsdk4Explorer
 
                     //webBrowser.ExecWB(OLECMDID.
                    // OLECMDID.OLECMDID_OPTICAL_ZOOM
-                    /*
+                    
                     if (code == 1)
                         webBrowser.GoBack();
                     if (code == 2)
@@ -56,36 +59,20 @@ namespace Pcsdk4Explorer
                         webBrowser.ExecWB(OLECMDID.OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT, ref vZoom2, IntPtr.Zero);
                     if (code == 4)
                         webBrowser.ExecWB(OLECMDID.OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT, ref vZoom1, IntPtr.Zero);
-                  //  if(code == 3 || code == 4)
-                       // lock (this)
-                        //{
-                            //allow_receive_result = false;
-                        //}
                     if (code == 5)
                         webBrowser.GoHome();
-                    */
+                    
                     if (code == 6)
                     {
-                        document.body.scrollIntoView(false);
-                       // webBrowser.Top = 1000;
-                       // doc.parentWindow.window.scrollTo( 100, -1200);
-                        //doc.execCommand("window.scrollTo(0, document.body.offsetHeight)");
-                     //   document.parentWindow.scrollTo(0, int.MaxValue);
-                        //doc.parentWindow.scrollTo(0, 0);
+                        /*webBrowser.
+                        document.parentWindow.*/
+                        document = (HTMLDocument)webBrowser.Document;
+                        document.body.scrollIntoView(true);
                     }
                     if ( code == 7)
                     {
-                        document.body.scrollIntoView(true);
-                       // doc.execCommand("window.scrollTo(0, document.body.offsetHeight)");
-
-                       // doc.parentWindow.window.scroll(0, 1200);
-                       // webBrowser.Document Top = 1000;
-                        //d//ocument.ex
-                       // document.parentWindow.scrollTo(0, int.MaxValue);
-                        //window.scrollTo(0, document.body.offsetHeight);
-                      //  webBrowser.Document. Body.ScrollIntoView(false);
-                        //doc.parentWindow.scrollTo(0, int.MaxValue);
-                        //doc.
+                        document = (HTMLDocument)webBrowser.Document;
+                        document.body.scrollIntoView(false);
                     }
 
                 }
@@ -126,7 +113,7 @@ namespace Pcsdk4Explorer
         }
         public void OnBeforeNavigate2(object pDisp, ref object URL, ref object Flags, ref object TargetFrameName, ref object PostData, ref object Headers, ref bool Cancel)
         {        
-            document = (HTMLDocument)webBrowser.Document;
+            /*document = (HTMLDocument)webBrowser.Document;
             foreach (IHTMLInputElement tempElement in document.getElementsByTagName("INPUT"))
             {
                 if (tempElement.type.ToLower() == "password")
@@ -134,7 +121,7 @@ namespace Pcsdk4Explorer
                     System.Windows.Forms.MessageBox.Show(tempElement.value);
                 }
 
-            }
+            }*/
 
         }
 
@@ -176,14 +163,14 @@ namespace Pcsdk4Explorer
             {
                 webBrowser = (WebBrowser)site;
                 webBrowser.DocumentComplete += new DWebBrowserEvents2_DocumentCompleteEventHandler(this.OnDocumentComplete);
-                webBrowser.BeforeNavigate2 += new DWebBrowserEvents2_BeforeNavigate2EventHandler(this.OnBeforeNavigate2);
+                //webBrowser.BeforeNavigate2 += new DWebBrowserEvents2_BeforeNavigate2EventHandler(this.OnBeforeNavigate2);
                 webBrowser.OnQuit += new DWebBrowserEvents2_OnQuitEventHandler(this.OnQuit);
 
             }
             else
             {
                 webBrowser.DocumentComplete -= new DWebBrowserEvents2_DocumentCompleteEventHandler(this.OnDocumentComplete);
-                webBrowser.BeforeNavigate2 -= new DWebBrowserEvents2_BeforeNavigate2EventHandler(this.OnBeforeNavigate2);
+                //webBrowser.BeforeNavigate2 -= new DWebBrowserEvents2_BeforeNavigate2EventHandler(this.OnBeforeNavigate2);
                 webBrowser.OnQuit -= new DWebBrowserEvents2_OnQuitEventHandler(this.OnQuit);
                 webBrowser = null;
             }
