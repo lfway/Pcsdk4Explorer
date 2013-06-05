@@ -19,11 +19,8 @@ namespace Pcsdk4Explorer
         WebBrowser webBrowser;
         HTMLDocument document;
         PcsdkRecog pc_sdk = new PcsdkRecog();
-        mshtml.HTMLDocument doc;
-        int counter_ = 0;
-        
-        //bool allow_receive_result = true;
-        int stop = 0;
+
+        static int stop = 0;
         private void ReceiveResult(int code, string message)
         {
             lock (this)
@@ -84,23 +81,18 @@ namespace Pcsdk4Explorer
         bool FirstRun = true;
         public void OnDocumentComplete(object pDisp, ref object URL)
         {
-            //lock (this)
-            //{
-                if (FirstRun == true)
-                {
-                    webBrowser.Navigate("http://lenta.ru");
-                    webBrowser.StatusBar = true;
-                    pc_sdk.Start();
-                    pc_sdk.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
-                }
-                else
-                {
+            if (FirstRun == true)
+            {
+                webBrowser.Navigate("http://lenta.ru");
+                webBrowser.StatusBar = true;
+                pc_sdk.Start();
+                pc_sdk.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
+            }
+            else
+            {
 
-                }
-                //allow_receive_result = true;
-                //System.Threading.Thread.Sleep(10);
-                FirstRun = false;
-            //}
+            }
+            FirstRun = false;
         }
         public void OnQuit()
         {
