@@ -21,6 +21,8 @@ namespace Pcsdk4Explorer
         PcsdkRecog pc_sdk = new PcsdkRecog();
 
         static int stop = 0;
+
+        // Callback from class PcsdkRecog
         private void ReceiveResult(int code, string message)
         {
             lock (this)
@@ -79,6 +81,7 @@ namespace Pcsdk4Explorer
         }
 
         bool FirstRun = true;
+        // On document complete event
         public void OnDocumentComplete(object pDisp, ref object URL)
         {
             if (FirstRun == true)
@@ -88,10 +91,6 @@ namespace Pcsdk4Explorer
                 pc_sdk.Start();
                 pc_sdk.MyNameCallback += new PcsdkRecog.MyNameDelegate(ReceiveResult);
             }
-            else
-            {
-
-            }
             FirstRun = false;
         }
         public void OnQuit()
@@ -100,15 +99,6 @@ namespace Pcsdk4Explorer
         }
         public void OnBeforeNavigate2(object pDisp, ref object URL, ref object Flags, ref object TargetFrameName, ref object PostData, ref object Headers, ref bool Cancel)
         {        
-            /*document = (HTMLDocument)webBrowser.Document;
-            foreach (IHTMLInputElement tempElement in document.getElementsByTagName("INPUT"))
-            {
-                if (tempElement.type.ToLower() == "password")
-                {
-                    System.Windows.Forms.MessageBox.Show(tempElement.value);
-                }
-
-            }*/
 
         }
 

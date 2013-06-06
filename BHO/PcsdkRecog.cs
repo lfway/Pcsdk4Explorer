@@ -9,49 +9,37 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using System.IO;
-//using ZedGraph;
-//using System.Drawing.Printing;
-
 using System.Diagnostics;
 using System.Runtime.ExceptionServices;
-
 using System.Threading;
-//using System.Drawing.Imaging;
 
 namespace Pcsdk4Explorer
 {
     public class PcsdkRecog
     {
-        // делегат
-        //public delegate void MyNameDelegate(List<PXCMPoint3DF32> message);
+        // Callback defenition
         public delegate void MyNameDelegate(int code, string message);
-        // событие
         public event MyNameDelegate MyNameCallback;
-        // отправка детектированного события
-        //private void SendResult(string message_to_send = "default")
-        // private void SendResult(List<PXCMPoint3DF32> message_to_send)
-        //{
-        //     MyNameCallback(message_to_send);
-        //}
+        
+        // Using callback
         private void SendResult(int message_to_send, string message2 = "")
         {
             MyNameCallback(message_to_send, message2);
         }
+
+        // pcsdk
         pxcmStatus sts;
         PXCMSession session;
         PXCMBase fanalysis;
-
+        // face analysis
         PXCMFaceAnalysis fa;
         PXCMFaceAnalysis.Detection detection;
         PXCMFaceAnalysis.Attribute face_attribute;
-        //PXCMFaceAnalysis.Detection.ProfileInfo dinfo;
-        //PXCMFaceAnalysis.Attribute.ProfileInfo attribute_dinfo;
         PXCMFaceAnalysis.ProfileInfo pf = new PXCMFaceAnalysis.ProfileInfo();
-        //PXCMFaceAnalysis.Landmark landmark;
         PXCMFaceAnalysis.Landmark.ProfileInfo lpi;
-
+        // capturing
         UtilMCapture capture;
-
+        // processing image
         BackgroundWorker bw1 = new BackgroundWorker();
 
         bool started = false;
@@ -84,6 +72,7 @@ namespace Pcsdk4Explorer
                 return;
             }
             started = true;
+
             bw1.DoWork += new DoWorkEventHandler(bw_DoWork);
             bw1.ProgressChanged += new ProgressChangedEventHandler(bw_ProgressChanged);
             bw1.WorkerReportsProgress = true;
@@ -129,6 +118,7 @@ namespace Pcsdk4Explorer
         Bitmap bmp;
         ulong timeStamp;
 
+        // micro moving
         int turned_abs_old = 0;
         int turned_vert_abs_old = 0;
         int mWaitBackTurn = 0;
@@ -142,8 +132,6 @@ namespace Pcsdk4Explorer
         bool mTurnToIncline = false;
 
         int dist_old = 0;
-
-        Thread thread;
 
         [HandleProcessCorruptedStateExceptions]
         void bw_DoWork(object sender, DoWorkEventArgs e)
@@ -187,15 +175,12 @@ namespace Pcsdk4Explorer
                 }
                 catch
                 {
-                    //MessageBox.Show("Frame capturing Error!");
                     return;
                 }
             }
-
             fa.Dispose();
             capture.Dispose();
             session.Dispose();
-            //GC.Collect();
         }
 
         GestureDetector mGestureDetector = new GestureDetector();
@@ -203,8 +188,6 @@ namespace Pcsdk4Explorer
         [HandleProcessCorruptedStateExceptions]
         void bw_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            //return;
-            //GC.Collect();
             int fid;
             uint fidx = 0;
             fa.QueryFace(fidx, out fid, out timeStamp);
@@ -216,12 +199,10 @@ namespace Pcsdk4Explorer
                 PXCMFaceAnalysis.Landmark landmark = (PXCMFaceAnalysis.Landmark)fa.DynamicCast(PXCMFaceAnalysis.Landmark.CUID);
                 landmark.QueryProfile(1, out lpi);
                 landmark.SetProfile(ref lpi);
-                //PXCMFaceAnalysis.Landmark.LandmarkData[] landmark_data = new PXCMFaceAnalysis.Landmark.LandmarkData[7];
                 sts = landmark.QueryLandmarkData(fid, PXCMFaceAnalysis.Landmark.Label.LABEL_7POINTS, landmark_data);
             }
             catch
             {
-                //SendResult(0);
                 return;
             }
             if (sts != pxcmStatus.PXCM_STATUS_ITEM_UNAVAILABLE)
@@ -237,7 +218,7 @@ namespace Pcsdk4Explorer
 
                 PXCMPoint3DF32 eye_left = GetCenter(eye_left_outer, eye_left_inner);
                 PXCMPoint3DF32 eye_right = GetCenter(eye_right_outer, eye_right_inner);
-                PXCMPoint3DF32 mouth = GetCenter(eye_left_inner, eye_mouth_right);
+                PXCMPoint3DF32 mouth = GetCenter(eye_left_inner, eye_mouth_right); // processing strange bug...
                 FacePosition f_pos = new FacePosition(eye_left, eye_right, mouth);
 
                 int eyes_distance = f_pos.getEyesDist();
@@ -252,13 +233,11 @@ namespace Pcsdk4Explorer
                     angle_2 = mGestureDetector.mAmplitudeIncline;
                     hor_ampl = mGestureDetector.mAmplitudeTurnHorizontal;
                     vert_ampl = mGestureDetector.mAmplitudeVertical;
-                    
                 }
 
                 //
                 // Detect zoom
                 //
-
                 int zoomed = 0;
                 if (eyes_distance > 110 && dist_old <= 110)
                 {
@@ -274,7 +253,6 @@ namespace Pcsdk4Explorer
                 {
                     try
                     {
-                        //thread = new Thread( SendResult);
                         SendResult(zoomed);
                     }
                     finally
@@ -282,12 +260,8 @@ namespace Pcsdk4Explorer
 
                     }
                     goto Exit;
-                    //return;
                 }
                 
-
-
-
                 //
                 // Detect turn
                 //
@@ -349,12 +323,8 @@ namespace Pcsdk4Explorer
                                 SendResult(5);
                             }
                         }
-                        finally
-                        {
-
-                        }
+                        finally { }
                     }
-                   // return;
                     goto Exit;
                 }
 
@@ -362,7 +332,6 @@ namespace Pcsdk4Explorer
                 //
                 // Detect turn up / down
                 //
-
                 int turn_up_down = 0;
                 lock (this)
                 {
@@ -411,16 +380,14 @@ namespace Pcsdk4Explorer
                                 SendResult(7);
                             }
                         }
-                        finally{}
+                        finally { }
                     }
                 }
-                //return;
             Exit:
                 string message_ = "x: " + hor_ampl.ToString() + ", y: " + vert_ampl.ToString() + ", dist: " + eyes_distance.ToString() + ", angle: " + angle_2.ToString();
                 SendResult(0, message_);
             }
         }
-
 
         protected PXCMPoint3DF32 GetCenter(PXCMPoint3DF32 p1, PXCMPoint3DF32 p2)
         {

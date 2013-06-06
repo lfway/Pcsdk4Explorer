@@ -7,12 +7,14 @@ namespace Pcsdk4Explorer
 {
     class FacePosition
     {
+        public string m_incline_to;
+        public string m_turn_to;
+        public string m_z_to;
         public FacePosition(PXCMPoint3DF32 LeftEye, PXCMPoint3DF32 RightEye, PXCMPoint3DF32 Mouth/*, PXCMPoint3DF32 CenterFrame*/)
         {
             mLeftEye = LeftEye;
             mRightEye = RightEye;
             mMouth = Mouth;
-            //mCenterFrame = CenterFrame;
             // angle between eyes
             mAngleLeftEyeToRightEye = (int)CalculateAngle(mLeftEye, mRightEye);
             // angle between eye - mouth
@@ -25,16 +27,15 @@ namespace Pcsdk4Explorer
             mEyesDistance = getDistance(mLeftEye, mRightEye);
         }
 
+        // some geometry
         protected PXCMPoint3DF32 mLeftEye;
         protected PXCMPoint3DF32 mRightEye;
         protected PXCMPoint3DF32 mMouth;
-        //protected PXCMPoint3DF32 mCenterFrame;
         protected PXCMPoint3DF32 mCenterFace;
         int mAngleLeftEyeToRightEye;
         int mAngleLeftEyeToMouth;
         int mAngleRightEyeToMouth;
         int mEyesDistance;
-        
         protected static double CalculateAngle(PXCMPoint3DF32 point1, PXCMPoint3DF32 point2)
         {
             int dx = (int)point1.x - (int)point2.x;
@@ -53,34 +54,19 @@ namespace Pcsdk4Explorer
         {
             return (int)mCenterFace.y;
         }
-        //public string m_incline_to;
-        //public string m_turn_to;
-        //public string m_z_to;
+
         public int getAndleEyes() { return mAngleLeftEyeToRightEye; }
-	    //public int getCenter() { return (int)mCenterFace.x; }
 	    public int getEyesDist() { return mEyesDistance; }
     }
 
     class GestureDetector
     {
         int MAX_FRAMES_COUNT = 15;
-
-        //threaf safe
-        /*public static GestureDetector instance = new GestureDetector();
-        private GestureDetector() { }
-        public static GestureDetector Instance
-        {
-            get
-            {
-                return instance;
-            }
-        }*/
-        //private object _lock;
         public void Clear()
         {
             mFacePositionsSequence.Clear();
         }
-
+        // add new frame data
         public void AddPosition(FacePosition FacePosition)
         {
             mFacePositionsSequence.Add(FacePosition);
@@ -91,18 +77,85 @@ namespace Pcsdk4Explorer
         }
 
         public int m_Detected_Gesture = 0;
-        public void Process(out int result/*, out string str1, out string str2*/)
+        public void Process(out int result)
         {
             result = mFacePositionsSequence.Count;
-            
+
+            if (result < 2)
+                return;
+
+            CalcAmplitudes();
+        }
+
+        public int GetResult()
+        {
+            return m_Detected_Gesture;
+        }
+        List<FacePosition> mFacePositionsSequence = new List<FacePosition>();
+
+        protected int CalcAmplitudes()
+	    {
+		    if( mFacePositionsSequence.Count < 2 )
+			    return -1;
+            int angle_min=0, angle_max=0;
+            int horizontal_delta = 0, vertical_delta = 0;
+
+		    for( int i = 0; i < mFacePositionsSequence.Count; i++)
+		    {
+                if (mFacePositionsSequence[i] == null)
+                    continue;
+                if (i > 0)
+                {
+                    if (mFacePositionsSequence[i-1] == null)
+                        continue;
+                }
+
+                // corner amplitude
+			    int angle_ = mFacePositionsSequence[i].getAndleEyes();
+			    if(angle_ < angle_min) angle_min = angle_;
+			    if(angle_ > angle_max) angle_max = angle_;
+
+                //amplitude of horizontal moving
+                if (i > 0)
+                {
+                    int d = mFacePositionsSequence[i].getCenter() - mFacePositionsSequence[i - 1].getCenter();
+                    horizontal_delta += d;
+                }
+
+                //amplitude of vertical moving
+                if (i > 0)
+                {
+                    int d = mFacePositionsSequence[i].getCenterV() - mFacePositionsSequence[i - 1].getCenterV();
+                    vertical_delta += d;
+                }
+		    }
+            mAmplitudeVertical = vertical_delta;
+		    mAmplitudeIncline = angle_max - angle_min;
+            mAmplitudeTurnHorizontal = horizontal_delta;
+            return 0;
+	    }
+
+        // amplitudes
+        public int mAmplitudeTurnHorizontal;
+        public int mAmplitudeVertical;
+        public int mAmplitudeTurnHorizontal_center=0;
+	    public int mAmplitudeIncline;
+
+        //  ==========
+        //  Only for concle output
+        //  ==========
+        public void Process(out int result, out string str1, out string str2)
+        {
+            str1 = "";
+            str2 = "";
+            result = mFacePositionsSequence.Count;
+
             // incline delta
             if (result < 2)
                 return;
-/*
+
             if (mFacePositionsSequence[mFacePositionsSequence.Count - 1] == null || mFacePositionsSequence[mFacePositionsSequence.Count - 2] == null)
                 return;
-            //if (mFacePositionsSequence[mFacePositionsSequence.Count] == null)
-                //return;
 
             // incline amplitude & history
             int angle_eyes_prelast = mFacePositionsSequence[mFacePositionsSequence.Count - 2].getAndleEyes();
@@ -142,122 +195,39 @@ namespace Pcsdk4Explorer
                 mFacePositionsSequence[mFacePositionsSequence.Count - 1].m_z_to = ".";
             if (Math.Abs(delta_eyes_dist) > 100)
                 mFacePositionsSequence[mFacePositionsSequence.Count - 1].m_z_to = "E";
-            */
 
-            //lock (this)
-            //{
-                CalcAmplitudes();
-           // }
-            //CalcHistory();
 
-            //string sequence_hor = "";
-            //string sequence_round = "";
-            //for (int i = 0; i < mFacePositionsSequence.Count; i++)
-            //{
-            //    sequence_hor += mFacePositionsSequence[i].m_turn_to;
-            //    sequence_round += mFacePositionsSequence[i].m_incline_to;
-            //}
-            //str1 = sequence_hor;
-            //str2 = sequence_round;
+            CalcAmplitudes();
+            CalcHistory();
+
+            string sequence_hor = "";
+            string sequence_round = "";
+            for (int i = 0; i < mFacePositionsSequence.Count; i++)
+            {
+                sequence_hor += mFacePositionsSequence[i].m_turn_to;
+                sequence_round += mFacePositionsSequence[i].m_incline_to;
+            }
+            str1 = sequence_hor;
+            str2 = sequence_round;
         }
-        public int GetResult()
-        {
-            return m_Detected_Gesture;
-        }
-        List<FacePosition> mFacePositionsSequence = new List<FacePosition>();
-
-        //===
+        string mInclineHistory;
+        string mTurnHistory;
+        string mZHistory;
         protected void CalcHistory()
-	    {
-            /*
-		    mInclineHistory = "";
+        {
+
+            mInclineHistory = "";
             mTurnHistory = "";
             mZHistory = "";
-		    for(int i = 0; i < mFacePositionsSequence.Count; i++)
-		    {
-                if (mFacePositionsSequence[i] == null)
-                    continue;
-			    mInclineHistory	+= mFacePositionsSequence[i].m_incline_to;
-			    mTurnHistory	+= mFacePositionsSequence[i].m_turn_to;
-			    mZHistory		+= mFacePositionsSequence[i].m_z_to;
-		    }
-            */
-	    }
-        protected int CalcAmplitudes()
-	    {
-		    if( mFacePositionsSequence.Count < 2 )
-			    return -1;
-            int angle_min=0, angle_max=0;
-            /*
-             * int turn_min=0, turn_max=0;
-             * for (int i = 0; i < mFacePositionsSequence.Count; i++)
+            for (int i = 0; i < mFacePositionsSequence.Count; i++)
             {
-                if (mFacePositionsSequence[i] != null)
-                {
-                    angle_min = mFacePositionsSequence[i].getAndleEyes(); 
-                    angle_max = mFacePositionsSequence[i].getAndleEyes();
-                    turn_min = mFacePositionsSequence[i].getCenter(); 
-                    turn_max = mFacePositionsSequence[i].getCenter();
-                }
-            }*/
-            //int angle_min = mFacePositionsSequence[0].getAndleEyes(), angle_max = mFacePositionsSequence[0].getAndleEyes();
-		    //int turn_min = mFacePositionsSequence[0].getCenter(), turn_max = mFacePositionsSequence[0].getCenter();
-
-
-            int horizontal_delta = 0, vertical_delta = 0;
-
-
-		    for( int i = 0; i < mFacePositionsSequence.Count; i++)
-		    {
-                //проверки
                 if (mFacePositionsSequence[i] == null)
                     continue;
-                if (i > 0)
-                {
-                    if (mFacePositionsSequence[i-1] == null)
-                        continue;
-                }
-
-                // амплитуда угла
-			    int angle_ = mFacePositionsSequence[i].getAndleEyes();
-			    if(angle_ < angle_min) angle_min = angle_;
-			    if(angle_ > angle_max) angle_max = angle_;
-
-                //амплитуда горизонтального смещения
-                if (i > 0)
-                {
-                    int d = mFacePositionsSequence[i].getCenter() - mFacePositionsSequence[i - 1].getCenter();
-                    horizontal_delta += d;
-                }
-
-                //амплитуда вертикального смещения
-                if (i > 0)
-                {
-                    int d = mFacePositionsSequence[i].getCenterV() - mFacePositionsSequence[i - 1].getCenterV();
-                    vertical_delta += d;
-                }
-
-
-		    }
-
-            mAmplitudeVertical = vertical_delta;
-		    mAmplitudeIncline = angle_max - angle_min;
-            mAmplitudeTurnHorizontal = horizontal_delta;
-
-            return 0;
-	    }
-        //===
-        //string mInclineHistory;
-	    //string mTurnHistory;
-	    //string mZHistory;
-
-        public int mAmplitudeTurnHorizontal;
-        public int mAmplitudeVertical;
-        public int mAmplitudeTurnHorizontal_center=0;
-
-	    public int mAmplitudeIncline;
-	    //int mAmplitudeUpDown;
-	    //int mAmplitudeZdistance;
+                mInclineHistory += mFacePositionsSequence[i].m_incline_to;
+                mTurnHistory += mFacePositionsSequence[i].m_turn_to;
+                mZHistory += mFacePositionsSequence[i].m_z_to;
+            }
+        }
 
     }
 }
